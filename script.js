@@ -431,6 +431,7 @@ const addNewTask = () => {
           </table>
           <div class="add-block-btn-wraper">
           <button onclick="addNewBlock('${id}','task-body-${id}')" class="add-block-btn">+</button>
+          <button onclick="removeBlock('${id}','task-body-${id}')" class="remove-block-btn">-</button>
           </div>
         </div>
   `;
@@ -521,6 +522,55 @@ const addNewBlock = (taskID, containerBodyID) => {
   initPickList(); // Initialize the new pick-lists
 };
 
+const removeBlock = (taskID, containerBodyID) => {
+  const $tbody = $(`#${containerBodyID}`);
+  const ThisTask = getTaskById(taskID);
+
+  // Get the last block (assuming you want to remove the last one)
+  const lastBlock = ThisTask.blocks[ThisTask.blocks.length - 1];
+  const blockID = lastBlock ? lastBlock.blockID : null;
+
+  if (blockID && ThisTask.blocks.length > 1) {
+    // Show confirmation dialog before removing the block
+    Swal.fire({
+      title: "האם אתה בטוח?",
+      text: "האם אתה בטוח שברצונך להסיר את הבלוק האחרון?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "כן, הסר",
+      cancelButtonText: "לא, השאר",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        // Remove the block from the task
+        const blockIndex = ThisTask.blocks.findIndex(
+          (block) => block.blockID === blockID
+        );
+        if (blockIndex !== -1) {
+          ThisTask.blocks.splice(blockIndex, 1);
+          $tbody.find(`#${blockID}`).remove();
+
+          // Remove all shifts associated with this block
+          SHIFTS_GLOBAL = SHIFTS_GLOBAL.filter(
+            (shift) => !shift.blockID.startsWith(blockID)
+          );
+          localStorage.setItem("shifts", JSON.stringify(SHIFTS_GLOBAL));
+
+          ThisTask.htmlString = document.getElementById(taskID).outerHTML;
+          localStorage.setItem("tasks2", JSON.stringify(TASK_GLOBAL2));
+        }
+      }
+    });
+  } else if (ThisTask.blocks.length <= 1) {
+    // Optional: Show warning if trying to remove the last block
+    Swal.fire({
+      title: "לא ניתן להסיר",
+      text: "חייב להיות לפחות בלוק אחד במשימה",
+      icon: "warning",
+      confirmButtonText: "אישור",
+    });
+  }
+};
+
 const addSoldierToBlock = (blockID) => {
   const $ph = $(`#soldier-amounts-${blockID}`);
   // Find the block in TASK_GLOBAL2 and increment soldierAmount
@@ -559,7 +609,7 @@ const removeSoldierFromBlock = (blockID) => {
       }
       block.soldierAmount = (block.soldierAmount || 1) - 1;
 
-      // Find the last pick-list element to remove 
+      // Find the last pick-list element to remove
       const lastPickListID = `pick-list-${blockID}-${block.soldierAmount + 1}`;
       const $lastPickList = $(`#${lastPickListID}`);
       // Remove associated shift from SHIFTS_GLOBAL if exists
