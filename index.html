@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="he">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+
+    <link rel="stylesheet" href="./style.css" />
+    <script src="./solidjer.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/gh/GiladMeirson/picklist.js@main/pickList.min.js"></script>
+    <script src="./script.js"></script>
+  </head>
+  <body dir="rtl">
+    <div class="container">
+      <div class="header">
+        <h1 id="header-title">שבצק</h1>
+        <input type="date" name="" id="header-date" />
+      </div>
+
+      <div class="tools">
+        <!-- <button id="addTaskBtn" class="btn" id="add-task">הוספת משימה</button> -->
+        <button class="btn" id="edit-task">בדיקת שבצק</button>
+        <button class="btn" onclick="showHereModal()" id="edit-task">
+          הזנת נוכחות
+        </button>
+      </div>
+      <div id="tasks-container" class="tasks-container">
+        <!-- <div class="table-container">
+          <h3>שם המשימה</h3>
+          <table class="example-task">
+            <thead>
+              <tr>
+                <th class="task-time">שעות</th>
+                <th class="solijer-name">שם חייל</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="task-time">
+                  <input type="time" name="" id="" /> -
+                  <input type="time" name="" id="" />
+                </td>
+                <td class="solijer-name">
+                  <pick-list placeholder="בחר חייל.."></pick-list>
+                  <pick-list placeholder="בחר חייל.."></pick-list>
+                  <pick-list placeholder="בחר חייל.."></pick-list>
+                </td>
+              </tr>
+              <tr>
+                <td class="task-time">
+                  <input type="time" name="" id="" /> -
+                  <input type="time" name="" id="" />
+                </td>
+                <td class="solijer-name">
+                  <pick-list placeholder="בחר חייל.."></pick-list>
+                </td>
+              </tr>
+              <tr>
+                <td class="task-time">
+                  <input type="time" name="" id="" /> -
+                  <input type="time" name="" id="" />
+                </td>
+                <td class="solijer-name">
+                  <pick-list placeholder="בחר חייל.."></pick-list>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="table-container">
+          <h3>שם המשימה</h3>
+          <table class="example-task">
+            <thead>
+              <tr>
+                <th class="task-time">שעות</th>
+                <th class="solijer-name">שם חייל</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="task-time">
+                  <input type="time" name="" id="" /> -
+                  <input type="time" name="" id="" />
+                </td>
+                <td class="solijer-name">
+                  <pick-list placeholder="בחר חייל.."></pick-list>
+                  <pick-list placeholder="בחר חייל.."></pick-list>
+                  <pick-list placeholder="בחר חייל.."></pick-list>
+                </td>
+              </tr>
+              <tr>
+                <td class="task-time">
+                  <input type="time" name="" id="" /> -
+                  <input type="time" name="" id="" />
+                </td>
+                <td class="solijer-name">
+                  <pick-list placeholder="בחר חייל.."></pick-list>
+                </td>
+              </tr>
+              <tr>
+                <td class="task-time">
+                  <input type="time" name="" id="" /> -
+                  <input type="time" name="" id="" />
+                </td>
+                <td class="solijer-name">
+                  <pick-list placeholder="בחר חייל.."></pick-list>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div> -->
+      </div>
+    </div>
+
+    <div class="modal-ph">
+      <div class="modal-add-task">
+        <div class="modal-wraper">
+          <input type="text" name="" id="task-name" placeholder="שם המשימה" />
+          <div class="is-continue-wraper">
+            <span>משימה רציפה ?</span>
+            <input
+              type="checkbox"
+              name=""
+              class="checkbox-input"
+              id="isContinueTask"
+            />
+          </div>
+
+          <span>כמות חיילים:</span>
+          <input type="number" name="" id="solidjer-amount" min="0" value="1" />
+          <span>כמות מפקדים:</span>
+          <input
+            type="number"
+            name=""
+            id="commandor-amount"
+            min="0"
+            value="0"
+          />
+          <div class="block-start-container">
+            <div class="block-start-wraper">
+              <span>שעת התחלה</span>
+              <input
+                class="start-time-in"
+                type="datetime-local"
+                name=""
+                id="start-time"
+              />
+              <span>משך בלוק:</span>
+              <input
+                class="block-duration"
+                type="number"
+                name=""
+                id="block-duration"
+                min="0.5"
+                value="4"
+              />
+            </div>
+          </div>
+
+          <div class="add-handy-block-wraper">
+            <button id="addBlockBtn" class="plus-btn">+</button>
+          </div>
+          <span class="block-amounts">כמות בלוקים:</span>
+          <input
+            class="block-amounts"
+            type="number"
+            name=""
+            id="block-amount"
+            min="1"
+            value="6"
+          />
+          <span>צבע למשימה</span>
+          <input type="color" name="" id="task-color" />
+          <button class="btn" id="save-task">שמירת משימה</button>
+          <button class="btn" id="close-modal">סגירת חלון</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-ishere">
+      <span class="task-close" onclick="closeishereModal()">X</span>
+      <div class="mega-wraper-ishere">
+        <div class="modal-ishere-wraper">
+          <div class="header-ishere">
+            <input type="date" name="" id="ishereINDATE" class="ishereINDATE" />
+          </div>
+          <div class="ishere-content">
+            <textarea
+              rows="10"
+              name=""
+              id="ishereIN"
+              class="ishereIN"
+            ></textarea>
+          </div>
+        </div>
+
+        <div class="modal-ishere-wraper">
+          <div class="header-ishere">
+            <input
+              type="date"
+              name=""
+              id="ishereINDATEtommorrow"
+              class="ishereINDATE"
+            />
+          </div>
+          <div class="ishere-content">
+            <textarea
+              rows="10"
+              name=""
+              id="ishereINtommorrow"
+              class="ishereIN"
+            ></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="wraper-btn">
+        <button class="btn" onclick="saveHeres()" id="save-ishere">
+          שמירת נוכחות
+        </button>
+      </div>
+    </div>
+
+    <div id="soldier-detail-modal" class="soldier-detail-container">
+      <div class="soldier-detail-wraper">
+        <div class="soldier-detail-header">
+          <h2 id="soldier-name">שם החייל</h2>
+          <h3 id="soldier-unit">מחלקה 3</h3>
+        </div>
+        <div class="detail-content">
+          <h3>משימה אחרונה</h3>
+          <div class="last-task">
+            <p id="last-task-name">סיור</p>
+            <p id="last-task-date">התחיל ב05:00 עד 13:00  <br> בתאריך 2023-10-01
+              </p>
+            
+            <p id="last-task-duration">משך המשימה : 8 שעות</p> 
+            <p id="last-task-rest"
+              >מנוחה עד למשימה הבאה לשיבוץ :
+              <span id="last-task-rest-time">6 שעות</span></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
