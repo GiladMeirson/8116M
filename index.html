@@ -8,6 +8,8 @@
     <link rel="stylesheet" href="./style.css" />
     <script src="./solidjer.js"></script>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/gh/GiladMeirson/picklist.js@main/pickList.min.js"></script>
     <script src="./script.js"></script>
@@ -21,7 +23,9 @@
 
       <div class="tools">
         <!-- <button id="addTaskBtn" class="btn" id="add-task">הוספת משימה</button> -->
-        <button class="btn" id="edit-task">בדיקת שבצק</button>
+        <button class="btn" onclick="createNewSchedule()" id="edit-task">
+          שבצק חדש עם אותן משימות
+        </button>
         <button class="btn" onclick="showHereModal()" id="edit-task">
           הזנת נוכחות
         </button>
@@ -232,13 +236,16 @@
           <h3>משימה אחרונה</h3>
           <div class="last-task">
             <p id="last-task-name">סיור</p>
-            <p id="last-task-date">התחיל ב05:00 עד 13:00  <br> בתאריך 2023-10-01
-              </p>
-            
-            <p id="last-task-duration">משך המשימה : 8 שעות</p> 
-            <p id="last-task-rest"
-              >מנוחה עד למשימה הבאה לשיבוץ :
-              <span id="last-task-rest-time">6 שעות</span></p>
+            <p id="last-task-date">
+              התחיל ב05:00 עד 13:00 <br />
+              בתאריך 2023-10-01
+            </p>
+
+            <p id="last-task-duration">משך המשימה : 8 שעות</p>
+            <p id="last-task-rest">
+              מנוחה עד למשימה הבאה לשיבוץ :
+              <span id="last-task-rest-time">6 שעות</span>
+            </p>
           </div>
         </div>
       </div>

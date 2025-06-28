@@ -68,9 +68,101 @@ const initPickList = () => {
   });
 };
 
+const createNewSchedule = () => {
+  // Calculate the previous day's date
+  const previousDate = new Date(TOM_DATE);
+  previousDate.setDate(previousDate.getDate() - 1);
+  const previousDateString = previousDate.toISOString().split("T")[0];
+
+  // Filter tasks that have at least one block with date matching TOM_DATE minus one day
+  const tasksToClone = TASK_GLOBAL2.filter((task) => {
+    return task.blocks.some((block) => block.blockDate === previousDateString);
+  });
+
+  if (tasksToClone.length === 0) {
+    Swal.fire({
+      title: "אין משימות להעתקה",
+      text: `לא נמצאו משימות מתאריך ${formatDate(new Date(previousDateString))} להעתקה`,
+      icon: "info",
+      confirmButtonText: "אישור",
+    });
+    return;
+  }
+
+  // Create a deep copy of filtered tasks
+  const newTasks = tasksToClone.map((task) => {
+    const newTaskId = generateUniqID();
+    const newBlocks = task.blocks.map((block) => {
+      const newBlockId = generateUniqID();
+      return {
+        ...block,
+        blockID: newBlockId,
+        blockDate: TOM_DATE, // Update to the current TOM_DATE
+      };
+    });
+
+    // Create new task object with new ID and blocks
+    const newTask = {
+      ...task,
+      id: newTaskId,
+      blocks: newBlocks,
+    };
+
+    // Generate new HTML string with updated IDs and date
+    let newHtmlString = task.htmlString;
+
+    // Replace task ID in HTML
+    newHtmlString = newHtmlString.replace(new RegExp(task.id, "g"), newTaskId);
+
+    // Replace block IDs and dates in HTML
+    task.blocks.forEach((originalBlock, index) => {
+      const newBlock = newBlocks[index];
+      newHtmlString = newHtmlString.replace(
+        new RegExp(originalBlock.blockID, "g"),
+        newBlock.blockID
+      );
+
+      // Update date value in HTML
+      newHtmlString = newHtmlString.replace(
+        `value="${originalBlock.blockDate}"`,
+        `value="${TOM_DATE}"`
+      );
+
+      // Update formatted date display
+      newHtmlString = newHtmlString.replace(
+        formatDate(new Date(originalBlock.blockDate)),
+        formatDate(new Date(TOM_DATE))
+      );
+    });
+
+    newTask.htmlString = newHtmlString;
+    return newTask;
+  });
+
+  // Add new tasks to TASK_GLOBAL2
+  TASK_GLOBAL2.push(...newTasks);
+
+  // Save to localStorage
+  localStorage.setItem("tasks2", JSON.stringify(TASK_GLOBAL2));
+
+  // Re-render the task list
+  RenderTaskList2();
+
+  // Show success message
+  Swal.fire({
+    title: "לוח זמנים חדש נוצר בהצלחה!",
+    text: `נוצרו ${newTasks.length} משימות חדשות לתאריך ${formatDate(
+      new Date(TOM_DATE)
+    )} מהעתקת משימות מתאריך ${formatDate(new Date(previousDateString))}`,
+    icon: "success",
+    confirmButtonText: "אישור",
+  });
+};
+
 const handleMainDateChange = (e) => {
   TOM_DATE = e.target.value; // Update the global date variable
   $("#header-title").html(`שבצק ל${formatDate(new Date(e.target.value))}`); // Set the header title
+  RenderTaskList2();
 };
 
 const addTask = () => {
@@ -262,34 +354,35 @@ const handleTimeChange = (input, isStart, taskID, blockID) => {
   //console.log("Time changed to:", timeValue, isStart, taskID, blockID);
   const taskIndex = TASK_GLOBAL2.findIndex((task) => task.id === taskID);
   if (taskIndex !== -1) {
-    if (isStart) {
-      TASK_GLOBAL2[taskIndex].blocks.find(
-        (block) => block.blockID === blockID
-      ).startTime = timeValue;
+    const block = TASK_GLOBAL2[taskIndex].blocks.find(
+      (block) => block.blockID === blockID
+    );
 
-      TASK_GLOBAL2[taskIndex].blocks.find(
-        (block) => block.blockID === blockID
-      ).duration = calculateDuration(
-        timeValue,
-        TASK_GLOBAL2[taskIndex].blocks.find(
-          (block) => block.blockID === blockID
-        ).endTime
-      );
-    } else {
-      TASK_GLOBAL2[taskIndex].blocks.find(
-        (block) => block.blockID === blockID
-      ).endTime = timeValue;
-      TASK_GLOBAL2[taskIndex].blocks.find(
-        (block) => block.blockID === blockID
-      ).duration = calculateDuration(
-        TASK_GLOBAL2[taskIndex].blocks.find(
-          (block) => block.blockID === blockID
-        ).startTime,
-        timeValue
-      );
+    if (block) {
+      if (isStart) {
+        block.startTime = timeValue;
+        block.duration = calculateDuration(timeValue, block.endTime);
+      } else {
+        block.endTime = timeValue;
+        block.duration = calculateDuration(block.startTime, timeValue);
+      }
+
+      // Update shifts that have blockIDs starting with this blockID
+      SHIFTS_GLOBAL.forEach((shift) => {
+        if (shift.blockID.startsWith(blockID)) {
+          if (isStart) {
+            shift.startTime = timeValue;
+          } else {
+            shift.endTime = timeValue;
+          }
+          shift.duration = block.duration;
+          shift.block = { ...block }; // Update the block reference in the shift
+        }
+      });
+
+      localStorage.setItem("shifts", JSON.stringify(SHIFTS_GLOBAL));
+      localStorage.setItem("tasks2", JSON.stringify(TASK_GLOBAL2));
     }
-
-    localStorage.setItem("tasks2", JSON.stringify(TASK_GLOBAL2));
   }
 };
 
@@ -306,6 +399,15 @@ const handleDateChange = (input, blockID) => {
       break;
     }
   }
+
+  // Update shifts that have blockIDs starting with this blockID
+  SHIFTS_GLOBAL.forEach((shift) => {
+    if (shift.blockID.startsWith(blockID)) {
+      shift.date = dateValue;
+      shift.block.blockDate = dateValue;
+    }
+  });
+  localStorage.setItem("shifts", JSON.stringify(SHIFTS_GLOBAL));
 
   const $blockDateSpan = $(`#block-date-${blockID}`);
   if ($blockDateSpan.length) {
@@ -511,6 +613,7 @@ const addNewBlock = (taskID, containerBodyID) => {
                 ${pickListElements}
                 </div>              
                 <button onclick="addSoldierToBlock('${blockID}')" class="add-soldier-btn">+</button>
+                <button onclick="removeSoldierFromBlock('${blockID}')" class="remove-soldier-btn">-</button>
                 </td>
               </tr>
   `;
@@ -634,7 +737,13 @@ const removeSoldierFromBlock = (blockID) => {
 const RenderTaskList2 = () => {
   const $tasksContainer = $("#tasks-container");
   $tasksContainer.empty(); // Clear previous tasks
-  TASK_GLOBAL2.forEach((task) => {
+
+  // Filter tasks that have at least one block with date matching TOM_DATE
+  const filteredTasks = TASK_GLOBAL2.filter((task) => {
+    return task.blocks.some((block) => block.blockDate === TOM_DATE);
+  });
+
+  filteredTasks.forEach((task) => {
     const taskHTML = task.htmlString;
     $tasksContainer.append(taskHTML);
     const taskElement = document.getElementById(task.id);
@@ -675,7 +784,6 @@ const RenderTaskList2 = () => {
     }
   });
 
-  //console.log("yes im here ! ");
   $tasksContainer.append(
     `<div class="btn-add-task-container">
       <button onclick="addNewTask()" class="add-task-btn">+</button>
@@ -1149,6 +1257,115 @@ const getColorForDurationSpan = (
     return "#4CAF50";
   }
 };
+
+
+
+
+const exportScheduleToPDF = async () => {
+  // Create a clean version of the schedule for PDF
+  const scheduleContent = document.createElement('div');
+  scheduleContent.innerHTML = `
+    <div style="text-align: center; margin-bottom: 20px;">
+      <h1>לוח משמרות - ${formatDate(new Date(TOM_DATE))}</h1>
+      <p>תאריך: ${TOM_DATE}</p>
+    </div>
+  `;
+  
+  // Clone tasks container without edit buttons
+  const tasksClone = document.getElementById('tasks-container').cloneNode(true);
+  
+  // Remove edit elements from clone
+  tasksClone.querySelectorAll('.task-close, .add-task-btn, .add-soldier-btn, .remove-soldier-btn, .add-block-btn, .remove-block-btn').forEach(el => el.remove());
+  
+  // Remove input fields and replace with text
+  tasksClone.querySelectorAll('input[type="time"], input[type="date"]').forEach(input => {
+    const span = document.createElement('span');
+    span.textContent = input.value;
+    span.className = input.className;
+    input.parentNode.replaceChild(span, input);
+  });
+  
+  // Replace pick-lists with selected values
+  tasksClone.querySelectorAll('pick-list').forEach(pickList => {
+    const span = document.createElement('span');
+    span.textContent = pickList.value || 'לא שובץ';
+    span.style.padding = '5px';
+    span.style.border = '1px solid #ccc';
+    span.style.display = 'inline-block';
+    span.style.margin = '2px';
+    pickList.parentNode.replaceChild(span, pickList);
+  });
+  
+  scheduleContent.appendChild(tasksClone);
+  
+  // Apply PDF-friendly styles
+  scheduleContent.style.cssText = `
+    font-family: Arial, sans-serif;
+    direction: rtl;
+    text-align: right;
+    max-width: 800px;
+    margin: 0 auto;
+    background: white;
+    padding: 20px;
+  `;
+  
+  // Add to document temporarily
+  document.body.appendChild(scheduleContent);
+  
+  try {
+    const canvas = await html2canvas(scheduleContent, {
+      scale: 2,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: '#ffffff'
+    });
+    
+    const imgData = canvas.toDataURL('image/png');
+    
+    // Access jsPDF correctly from the window object
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF();
+    
+    const imgWidth = 210;
+    const pageHeight = 295;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    let heightLeft = imgHeight;
+    let position = 0;
+    
+    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+    heightLeft -= pageHeight;
+    
+    while (heightLeft >= 0) {
+      position = heightLeft - imgHeight;
+      pdf.addPage();
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+    }
+    
+    pdf.save(`schedule-${TOM_DATE}.pdf`);
+    
+    Swal.fire({
+      title: 'PDF נוצר בהצלחה!',
+      text: 'הקובץ נשמר בהצלחה',
+      icon: 'success',
+      confirmButtonText: 'אישור'
+    });
+    
+  } catch (error) {
+    console.error('Error generating PDF:', error);
+    Swal.fire({
+      title: 'שגיאה ביצירת PDF',
+      text: 'אירעה שגיאה בעת יצירת קובץ ה-PDF',
+      icon: 'error',
+      confirmButtonText: 'אישור'
+    });
+  } finally {
+    // Clean up
+    document.body.removeChild(scheduleContent);
+  }
+};
+
+
 
 //EXAMPLE SHIFT OBJECT
 // {
