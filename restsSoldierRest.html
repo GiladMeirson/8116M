@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>שבצק מסייעת 8116</title>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <!-- DataTables CSS -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css"
+    />
+    <link rel="stylesheet" href="./style.css" />
+    <link rel="stylesheet" href="./tableStyle.css">
+
+    <!-- DataTables JavaScript -->
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    <script src="./solidjer.js"></script>
+    <script src="./RestDT.js"></script>
+  </head>
+  <body dir="rtl">
+    <div class="container-table">
+      <h1>מבט על - חיילים</h1>
+      <div class="btn-tools">
+        <button class="btn" onclick="moveto('index')" id="edit-task">
+          חזרה לשבצק
+        </button>
+        <button class="btn" onclick="exportScheduleToPDF()" id="edit-task">
+          ייצוא לPDF
+        </button>
+      </div>
+      <table id="status-soldier">
+        <thead>
+          <tr>
+            <th>שם החייל</th>
+            <th>מספר אישי</th>
+            <th>משימה אחרונה</th>
+            <th>תאריך סיום משימה אחרונה</th>
+            <th>זמן מנוחה</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </body>
+</html>

@@ -29,10 +29,6 @@ $(document).ready(() => {
   });
   $("#save-task").click(saveTask);
   $("#start-time").val(tommorowDate + "T13:00");
-  $("#isContinueTask").prop("checked", true); // Set the checkbox to true by default
-  $(".add-handy-block-wraper").hide();
-  $("#isContinueTask").change(changeHandler);
-  $("#addBlockBtn").click(handleAddBlock);
   $("#ishereINDATE").val(tommorowDate);
   $("#ishereINDATEtommorrow").val(day2after);
   $("#header-date").change(handleMainDateChange);
@@ -54,7 +50,7 @@ const initPickList = () => {
     soldiersForDate = soldiersForDate.map((soldier) => {
       return getFullSoldiersByNames([soldier.name])[0];
     });
-    console.log(soldiersForDate);
+    //console.log(soldiersForDate);
     soldiersForDate.push(getFullSoldiersByNames(["?"])[0]); // Add the "?" option
     item.setItems(soldiersForDate);
     item.addEventListener("picklist-select", handleChangePickList);
@@ -214,126 +210,6 @@ const saveTask = () => {
   });
 };
 
-const RenderTask = (task) => {
-  let timeblocks = [];
-
-  if (task.isContinueTask) {
-    // Original logic for continuous tasks
-    let [hours, minutes] = task.startTime.split(":");
-    let startTime = new Date(task.startTime);
-    let currentDate = new Date(task.startTime.split("T")[0]); // Base date
-    startTime.setHours(parseInt(hours), parseInt(minutes), 0);
-
-    for (let i = 0; i < task.blockAmount; i++) {
-      let blockStart = new Date(
-        startTime.getTime() + i * task.blockDuration * 60 * 60 * 1000
-      );
-      let blockEnd = new Date(
-        startTime.getTime() + (i + 1) * task.blockDuration * 60 * 60 * 1000
-      );
-
-      // If this block starts on a later hour than the previous block ended,
-      // we're still on the same date
-      if (
-        i > 0 &&
-        blockStart.getHours() < timeblocks[i - 1].end.split(":")[0]
-      ) {
-        currentDate.setDate(currentDate.getDate() + 1);
-      }
-
-      let blockFullDate = currentDate.toISOString().split("T")[0];
-
-      timeblocks.push({
-        start: formatTime(blockStart),
-        end: formatTime(blockEnd),
-        date: formatDate(blockStart),
-        fulldate: blockFullDate,
-        blockID: task.blocks[i].blockID,
-      });
-    }
-  } else {
-    // Logic for non-continuous tasks
-    task.blocks.forEach((block) => {
-      let [hours, minutes] = block.startTime.split("T")[1].split(":");
-      let blockStart = new Date(block.startTime);
-      blockStart.setHours(parseInt(hours), parseInt(minutes), 0);
-
-      let blockEnd = new Date(
-        blockStart.getTime() + parseInt(block.blockDuration) * 60 * 60 * 1000
-      );
-
-      timeblocks.push({
-        start: formatTime(blockStart),
-        end: formatTime(blockEnd),
-        date: formatDate(blockStart),
-        fulldate: blockStart.toISOString().split("T")[0],
-        blockID: block.blockID,
-      });
-    });
-  }
-
-  // Create the table container and header
-  let Finalstr = `
-        <div class="table-container">
-        <span class="task-close" onclick="removeTask(this)" id="${task.taskName}">X</span>
-          <h2 style="background-color:${task.taskColor}">${task.taskName}</h2>
-          <table class="example-task">
-            <thead>
-              <tr>
-                <th class="task-time">שעות</th>
-                <th class="solijer-name">שם חייל</th>
-              </tr>
-            </thead>
-            <tbody>`;
-
-  // Generate rows for each time block
-  timeblocks.forEach((block) => {
-    Finalstr += `
-              <tr>
-                <td class="task-time">
-                  <span class="block-date">${block.date}</span><br>
-                  <input type="time" class="start-time timeIN" value="${block.start}" /> -
-                  <input type="time" class="end-time timeIN" value="${block.end}" />
-                </td>
-                <td class="solijer-name">`;
-
-    // Add pick-list elements based on required soldiers and commanders
-    for (let i = 0; i < task.soldierAmount + task.commanderAmount; i++) {
-      Finalstr += `<pick-list data-date="${block.fulldate}" 
-      id="pick-list-${block.blockID}"
-      data-start="${block.start}" 
-      data-end="${block.end}" 
-      data-task-name="${task.taskName}" placeholder="בחר חייל.."></pick-list>`;
-    }
-
-    Finalstr += `
-                </td>
-              </tr>`;
-  });
-
-  // Close the table and container
-  Finalstr += `
-            </tbody>
-          </table>
-        </div>`;
-
-  return Finalstr;
-};
-
-const RenderTasksList = (tasksList) => {
-  const $tasksContainer = $("#tasks-container");
-  $tasksContainer.empty(); // Clear previous tasks
-  tasksList.forEach((task) => {
-    const taskHTML = RenderTask(task);
-    $tasksContainer.append(taskHTML);
-  });
-  $tasksContainer.append(
-    `<div class="btn-add-task-container">
-      <button onclick="addNewTask()" class="add-task-btn">+</button>
-    </div>`
-  );
-  initPickList();
-};
 
 const handleNameChange = (input, taskID) => {
   const taskName = input.value.trim();
@@ -805,35 +681,6 @@ function formatDate(date) {
   return `יום ${dayName}`;
 }
 
-const changeHandler = () => {
-  const isChecked = $("#isContinueTask").is(":checked");
-  if (isChecked) {
-    $(".block-amounts").show();
-    $(".add-handy-block-wraper").hide();
-  } else {
-    $(".block-amounts").hide();
-    $(".add-handy-block-wraper").show();
-  }
-};
-
-const handleAddBlock = () => {
-  let length = $(".start-time").length;
-  let strBlock = `
-  <span>שעת התחלה</span>
-              <input type="datetime-local" name="" class="start-time-in" id="start-time-in${length}" />
-              <span>משך בלוק:</span>
-              <input
-                type="number"
-                name=""
-                class="block-duration"
-                id="block-duration"
-                min="0.5"
-                value="4"
-              />
-  `;
-  $(".block-start-wraper").append(strBlock);
-};
-
 const handleRemovePickList = (e) => {
   if (e.detail.value == "") {
     console.log("inside !#@");
@@ -938,6 +785,7 @@ const handleMouseOverPickList = (e) => {
     $("#soldier-detail-modal #soldier-unit").text(
       "מחלקת " + soldierObj.keywords[0]
     );
+    $('#last-task-name').html(last_shift.taskName);
     $("#last-task-date").html(lastTaskDate);
     $("#last-task-duration").text(`משך המשימה : ${last_shift.duration} שעות`);
     $("#last-task-rest-time").text(
@@ -1257,10 +1105,6 @@ const getColorForDurationSpan = (
     return "#4CAF50";
   }
 };
-
-
-
-
 const exportScheduleToPDF = async () => {
   // Create a clean version of the schedule for PDF
   const scheduleContent = document.createElement('div');
@@ -1365,6 +1209,9 @@ const exportScheduleToPDF = async () => {
   }
 };
 
+const moveto=(locationName)=>{
+  window.location.href = `${locationName}.html`;
+};
 
 
 //EXAMPLE SHIFT OBJECT

@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
+    <title>שבצק מסייעת 8116</title>
 
     <link rel="stylesheet" href="./style.css" />
     <script src="./solidjer.js"></script>
@@ -28,6 +28,12 @@
         </button>
         <button class="btn" onclick="showHereModal()" id="edit-task">
           הזנת נוכחות
+        </button>
+        <button class="btn" onclick="exportScheduleToPDF()" id="edit-task">
+          ייצוא לPDF
+        </button>
+        <button class="btn" onclick="moveto('restsSoldierRest')" id="edit-task">
+          מבט על - חיילים
         </button>
       </div>
       <div id="tasks-container" class="tasks-container">
@@ -117,72 +123,6 @@
         </div> -->
       </div>
     </div>
-
-    <div class="modal-ph">
-      <div class="modal-add-task">
-        <div class="modal-wraper">
-          <input type="text" name="" id="task-name" placeholder="שם המשימה" />
-          <div class="is-continue-wraper">
-            <span>משימה רציפה ?</span>
-            <input
-              type="checkbox"
-              name=""
-              class="checkbox-input"
-              id="isContinueTask"
-            />
-          </div>
-
-          <span>כמות חיילים:</span>
-          <input type="number" name="" id="solidjer-amount" min="0" value="1" />
-          <span>כמות מפקדים:</span>
-          <input
-            type="number"
-            name=""
-            id="commandor-amount"
-            min="0"
-            value="0"
-          />
-          <div class="block-start-container">
-            <div class="block-start-wraper">
-              <span>שעת התחלה</span>
-              <input
-                class="start-time-in"
-                type="datetime-local"
-                name=""
-                id="start-time"
-              />
-              <span>משך בלוק:</span>
-              <input
-                class="block-duration"
-                type="number"
-                name=""
-                id="block-duration"
-                min="0.5"
-                value="4"
-              />
-            </div>
-          </div>
-
-          <div class="add-handy-block-wraper">
-            <button id="addBlockBtn" class="plus-btn">+</button>
-          </div>
-          <span class="block-amounts">כמות בלוקים:</span>
-          <input
-            class="block-amounts"
-            type="number"
-            name=""
-            id="block-amount"
-            min="1"
-            value="6"
-          />
-          <span>צבע למשימה</span>
-          <input type="color" name="" id="task-color" />
-          <button class="btn" id="save-task">שמירת משימה</button>
-          <button class="btn" id="close-modal">סגירת חלון</button>
-        </div>
-      </div>
-    </div>
-
     <div class="modal-ishere">
       <span class="task-close" onclick="closeishereModal()">X</span>
       <div class="mega-wraper-ishere">

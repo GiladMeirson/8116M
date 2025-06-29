@@ -1,0 +1,21 @@
+.btn-tools{
+    margin-bottom: 30px;
+}
+
+.container-table{
+    margin-inline: 15px;
+}
+
+.container-table #status-soldier th {
+    text-align: center;
+    font-weight: 900;
+    font-size: 26px;
+}
+
+.container-table #status-soldier td {
+    font-size: 20px;
+}
+
+#dataTables_length,#status-soldier_filter{
+    margin-bottom: 20px;
+}
