@@ -2,7 +2,8 @@ TASK_GLOBAL = [];
 TASK_GLOBAL2 = [];
 SHIFTS_GLOBAL = [];
 SOLIDIER_HERE_GLOBAL = [];
-API_PREFIX = "http://localhost:3000";
+API_PREFIX_LOCAL = "http://localhost:3000";
+API_PREFIX = "https://eight116m-server.onrender.com/";
 
 $(document).ready(() => {
   let tommorowDate = new Date();
