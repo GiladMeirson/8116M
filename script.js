@@ -2,6 +2,7 @@ TASK_GLOBAL = [];
 TASK_GLOBAL2 = [];
 SHIFTS_GLOBAL = [];
 SOLIDIER_HERE_GLOBAL = [];
+API_PREFIX = "http://localhost:3000";
 
 $(document).ready(() => {
   let tommorowDate = new Date();
@@ -15,7 +16,7 @@ $(document).ready(() => {
   $("#header-date").val(tommorowDate);
   $("#header-title").html(`שבצק ל${formatDate(new Date(TOM_DATE))}`); // Set the header title
 
-  TASK_GLOBAL = JSON.parse(localStorage.getItem("tasks")) || [];
+  getFromServer();
   TASK_GLOBAL2 = JSON.parse(localStorage.getItem("tasks2")) || [];
   SHIFTS_GLOBAL = JSON.parse(localStorage.getItem("shifts")) || [];
   SOLIDIER_HERE_GLOBAL = JSON.parse(localStorage.getItem("solidierHere")) || [];
@@ -78,7 +79,9 @@ const createNewSchedule = () => {
   if (tasksToClone.length === 0) {
     Swal.fire({
       title: "אין משימות להעתקה",
-      text: `לא נמצאו משימות מתאריך ${formatDate(new Date(previousDateString))} להעתקה`,
+      text: `לא נמצאו משימות מתאריך ${formatDate(
+        new Date(previousDateString)
+      )} להעתקה`,
       icon: "info",
       confirmButtonText: "אישור",
     });
@@ -209,7 +212,6 @@ const saveTask = () => {
     $(".modal-ph").fadeOut();
   });
 };
-
 
 const handleNameChange = (input, taskID) => {
   const taskName = input.value.trim();
@@ -785,7 +787,7 @@ const handleMouseOverPickList = (e) => {
     $("#soldier-detail-modal #soldier-unit").text(
       "מחלקת " + soldierObj.keywords[0]
     );
-    $('#last-task-name').html(last_shift.taskName);
+    $("#last-task-name").html(last_shift.taskName);
     $("#last-task-date").html(lastTaskDate);
     $("#last-task-duration").text(`משך המשימה : ${last_shift.duration} שעות`);
     $("#last-task-rest-time").text(
@@ -1107,41 +1109,47 @@ const getColorForDurationSpan = (
 };
 const exportScheduleToPDF = async () => {
   // Create a clean version of the schedule for PDF
-  const scheduleContent = document.createElement('div');
+  const scheduleContent = document.createElement("div");
   scheduleContent.innerHTML = `
     <div style="text-align: center; margin-bottom: 20px;">
       <h1>לוח משמרות - ${formatDate(new Date(TOM_DATE))}</h1>
       <p>תאריך: ${TOM_DATE}</p>
     </div>
   `;
-  
+
   // Clone tasks container without edit buttons
-  const tasksClone = document.getElementById('tasks-container').cloneNode(true);
-  
+  const tasksClone = document.getElementById("tasks-container").cloneNode(true);
+
   // Remove edit elements from clone
-  tasksClone.querySelectorAll('.task-close, .add-task-btn, .add-soldier-btn, .remove-soldier-btn, .add-block-btn, .remove-block-btn').forEach(el => el.remove());
-  
+  tasksClone
+    .querySelectorAll(
+      ".task-close, .add-task-btn, .add-soldier-btn, .remove-soldier-btn, .add-block-btn, .remove-block-btn"
+    )
+    .forEach((el) => el.remove());
+
   // Remove input fields and replace with text
-  tasksClone.querySelectorAll('input[type="time"], input[type="date"]').forEach(input => {
-    const span = document.createElement('span');
-    span.textContent = input.value;
-    span.className = input.className;
-    input.parentNode.replaceChild(span, input);
-  });
-  
+  tasksClone
+    .querySelectorAll('input[type="time"], input[type="date"]')
+    .forEach((input) => {
+      const span = document.createElement("span");
+      span.textContent = input.value;
+      span.className = input.className;
+      input.parentNode.replaceChild(span, input);
+    });
+
   // Replace pick-lists with selected values
-  tasksClone.querySelectorAll('pick-list').forEach(pickList => {
-    const span = document.createElement('span');
-    span.textContent = pickList.value || 'לא שובץ';
-    span.style.padding = '5px';
-    span.style.border = '1px solid #ccc';
-    span.style.display = 'inline-block';
-    span.style.margin = '2px';
+  tasksClone.querySelectorAll("pick-list").forEach((pickList) => {
+    const span = document.createElement("span");
+    span.textContent = pickList.value || "לא שובץ";
+    span.style.padding = "5px";
+    span.style.border = "1px solid #ccc";
+    span.style.display = "inline-block";
+    span.style.margin = "2px";
     pickList.parentNode.replaceChild(span, pickList);
   });
-  
+
   scheduleContent.appendChild(tasksClone);
-  
+
   // Apply PDF-friendly styles
   scheduleContent.style.cssText = `
     font-family: Arial, sans-serif;
@@ -1152,56 +1160,55 @@ const exportScheduleToPDF = async () => {
     background: white;
     padding: 20px;
   `;
-  
+
   // Add to document temporarily
   document.body.appendChild(scheduleContent);
-  
+
   try {
     const canvas = await html2canvas(scheduleContent, {
       scale: 2,
       useCORS: true,
       allowTaint: true,
-      backgroundColor: '#ffffff'
+      backgroundColor: "#ffffff",
     });
-    
-    const imgData = canvas.toDataURL('image/png');
-    
+
+    const imgData = canvas.toDataURL("image/png");
+
     // Access jsPDF correctly from the window object
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF();
-    
+
     const imgWidth = 210;
     const pageHeight = 295;
     const imgHeight = (canvas.height * imgWidth) / canvas.width;
     let heightLeft = imgHeight;
     let position = 0;
-    
-    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+
+    pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
     heightLeft -= pageHeight;
-    
+
     while (heightLeft >= 0) {
       position = heightLeft - imgHeight;
       pdf.addPage();
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
       heightLeft -= pageHeight;
     }
-    
+
     pdf.save(`schedule-${TOM_DATE}.pdf`);
-    
+
     Swal.fire({
-      title: 'PDF נוצר בהצלחה!',
-      text: 'הקובץ נשמר בהצלחה',
-      icon: 'success',
-      confirmButtonText: 'אישור'
+      title: "PDF נוצר בהצלחה!",
+      text: "הקובץ נשמר בהצלחה",
+      icon: "success",
+      confirmButtonText: "אישור",
     });
-    
   } catch (error) {
-    console.error('Error generating PDF:', error);
+    console.error("Error generating PDF:", error);
     Swal.fire({
-      title: 'שגיאה ביצירת PDF',
-      text: 'אירעה שגיאה בעת יצירת קובץ ה-PDF',
-      icon: 'error',
-      confirmButtonText: 'אישור'
+      title: "שגיאה ביצירת PDF",
+      text: "אירעה שגיאה בעת יצירת קובץ ה-PDF",
+      icon: "error",
+      confirmButtonText: "אישור",
     });
   } finally {
     // Clean up
@@ -1209,11 +1216,63 @@ const exportScheduleToPDF = async () => {
   }
 };
 
-const moveto=(locationName)=>{
+const moveto = (locationName) => {
   window.location.href = `${locationName}.html`;
 };
 
+const saveToserver = () => {
+  const dataToSave = {
+    tasks: TASK_GLOBAL2,
+    shifts: SHIFTS_GLOBAL,
+    soldiersHere: SOLIDIER_HERE_GLOBAL,
+  };
 
+  fetch(`${API_PREFIX}/api/data`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(dataToSave),
+  })
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+      return response.json();
+    })
+    .then((data) => {
+      console.log("Data saved successfully:", data);
+    })
+    .catch((error) => {
+      console.error("Error saving data:", error);
+    });
+};
+
+const getFromServer = () => {
+  fetch(`${API_PREFIX}/api/data`)
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+      return response.json();
+    })
+    .then((data) => {
+      // Assuming data contains tasks, shifts, and soldiersHere
+      TASK_GLOBAL2 = data.data.tasks || [];
+      SHIFTS_GLOBAL = data.data.shift || [];
+      SOLIDIER_HERE_GLOBAL = data.data.soldiersHere || [];
+      console.log("Data fetched successfully:", data);
+      localStorage.setItem("tasks2", JSON.stringify(TASK_GLOBAL2));
+      localStorage.setItem("shifts", JSON.stringify(SHIFTS_GLOBAL));
+      localStorage.setItem(
+        "soldiersHere",
+        JSON.stringify(SOLIDIER_HERE_GLOBAL)
+      );
+    })
+    .catch((error) => {
+      console.error("Error fetching data:", error);
+    });
+};
 //EXAMPLE SHIFT OBJECT
 // {
 //     "soldierName": "ליאור בדני",
@@ -1232,4 +1291,102 @@ const moveto=(locationName)=>{
 //         "taskId": "U7ubK",
 //         "taskColor": "#4CAF50"
 //     }
+// }
+// {
+//     "timestamp": "2025-06-30T22:31:29.482Z",
+//     "shift": [
+//         {
+//             "soldierName": "זאב אהר בלאוגרונד",
+//             "startTime": "09:00",
+//             "taskName": "בונקר",
+//             "blockID": "awFln",
+//             "endTime": "13:00",
+//             "duration": 4,
+//             "date": "2025-07-01",
+//             "block": {
+//                 "blockID": "awFln",
+//                 "blockDate": "2025-07-01",
+//                 "startTime": "09:00",
+//                 "endTime": "13:00",
+//                 "duration": 4,
+//                 "soldierAmount": 1,
+//                 "taskId": "WrCXg",
+//                 "taskColor": "#FF5252"
+//             }
+//         },
+//         {
+//             "soldierName": "?",
+//             "startTime": "09:00",
+//             "taskName": "שג",
+//             "blockID": "zUkSN",
+//             "endTime": "13:00",
+//             "duration": 4,
+//             "date": "2025-07-01",
+//             "block": {
+//                 "blockID": "zUkSN",
+//                 "blockDate": "2025-07-01",
+//                 "startTime": "09:00",
+//                 "endTime": "13:00",
+//                 "duration": 4,
+//                 "soldierAmount": 1,
+//                 "taskId": "VYPC7",
+//                 "taskColor": "#4CAF50"
+//             }
+//         }
+//     ],
+//     "soldiersHere": [
+//         {
+//             "name": "זאב אהר בלאוגרונד",
+//             "date": "2025-07-01",
+//             "isHere": true
+//         },
+//         {
+//             "name": "יבגני יודקוביץ",
+//             "date": "2025-07-01",
+//             "isHere": true
+//         },
+//         {
+//             "name": "יהב מלקו",
+//             "date": "2025-07-01",
+//             "isHere": true
+//         },
+//         {
+//             "name": "יהונתן קזיאב",
+//             "date": "2025-07-01",
+//             "isHere": true
+//         },
+//         {
+//             "name": "יהונתן שפילמן",
+//             "date": "2025-07-01",
+//             "isHere": true
+//         },
+//         {
+//             "name": "יובל חי שניצר",
+//             "date": "2025-07-01",
+//             "isHere": true
+//         },
+//         {
+//             "name": "יוחאי ברזילי",
+//             "date": "2025-07-01",
+//             "isHere": true
+//         }
+//     ],
+//     "tasks": [
+//         {
+//             "color": "#FF5252",
+//             "id": "2QWfL",
+//             "blocks": [
+//                 {
+//                     "blockID": "5YY0a",
+//                     "blockDate": "2025-07-01",
+//                     "startTime": "09:00",
+//                     "endTime": "13:00",
+//                     "duration": 4,
+//                     "soldierAmount": 1
+//                 }
+//             ],
+//             "htmlString": "<div class=\"table-container\" id=\"2QWfL\">\n        <span class=\"task-close\" onclick=\"removeTask('2QWfL')\">X</span>\n          <h2 style=\"background-color:#FF5252\"><input style=\"background-color:#FF5252\" type=\"text\" class=\"task-title\" id=\"\" onkeyup=\"handleNameChange(this,'2QWfL')\" value=\"שם המשימה\">\n          </h2>\n          <table class=\"example-task\">\n            <thead>\n              <tr>\n                <th class=\"task-time\">שעות</th>\n                <th class=\"solijer-name\">שם חייל</th>\n              </tr>\n            </thead>\n            <tbody id=\"task-body-2QWfL\">\n              <tr id=\"5YY0a\">\n                <td class=\"task-time\">\n                <div class=\"block-date-wraper\">\n                  <span id=\"block-date-5YY0a\" class=\"block-date\">יום שלישי</span>\n                  <input type=\"date\" onchange=\"handleDateChange(this,'5YY0a')\" class=\"start-time timeIN\" value=\"2025-07-01\">\n                </div>\n                <div class=\"ttime-block-wraper\">\n                  \n      <div class=\"ttime ttime-start\">\n      <input onchange=\"handleTimeChange(this,true,'2QWfL','5YY0a')\" class=\"ttime-IN hours-start\" value=\"09:00\" list=\"hours-start\">\n      <datalist id=\"hours-start\">\n        <option value=\"00:00\"></option>\n        <option value=\"01:00\"></option>\n        <option value=\"02:00\"></option>\n        <option value=\"03:00\"></option>\n        <option value=\"04:00\"></option>\n        <option value=\"05:00\"></option>\n        <option value=\"06:00\"></option>\n        <option value=\"07:00\"></option>\n        <option value=\"08:00\"></option>\n        <option value=\"09:00\"></option>\n        <option value=\"10:00\"></option>\n        <option value=\"11:00\"></option>\n        <option value=\"12:00\"></option>\n        <option selected=\"\" value=\"13:00\"></option>\n        <option value=\"14:00\"></option>\n        <option value=\"15:00\"></option>\n        <option value=\"16:00\"></option>\n        <option value=\"17:00\"></option>\n        <option value=\"18:00\"></option>\n        <option value=\"19:00\"></option>\n        <option value=\"20:00\"></option>\n        <option value=\"21:00\"></option>\n        <option value=\"22:00\"></option>\n        <option value=\"23:00\"></option>\n\n      </datalist>\n    </div> <span class=\"makaf\">-</span>\n                  \n      <div class=\"ttime ttime-end\">\n      <input onchange=\"handleTimeChange(this,false,'2QWfL','5YY0a')\" class=\"ttime-IN hours-end\" value=\"13:00\" list=\"hours-end\">\n      <datalist id=\"hours-end\">\n        <option value=\"00:00\"></option>\n        <option value=\"01:00\"></option>\n        <option value=\"02:00\"></option>\n        <option value=\"03:00\"></option>\n        <option value=\"04:00\"></option>\n        <option value=\"05:00\"></option>\n        <option value=\"06:00\"></option>\n        <option value=\"07:00\"></option>\n        <option value=\"08:00\"></option>\n        <option value=\"09:00\"></option>\n        <option value=\"10:00\"></option>\n        <option value=\"11:00\"></option>\n        <option value=\"12:00\"></option>\n        <option selected=\"\" value=\"13:00\"></option>\n        <option value=\"14:00\"></option>\n        <option value=\"15:00\"></option>\n        <option value=\"16:00\"></option>\n        <option value=\"17:00\"></option>\n        <option value=\"18:00\"></option>\n        <option value=\"19:00\"></option>\n        <option value=\"20:00\"></option>\n        <option value=\"21:00\"></option>\n        <option value=\"22:00\"></option>\n        <option value=\"23:00\"></option>\n\n      </datalist>\n    </div>\n                </div>\n                  \n                </td>\n                <td class=\"solijer-name\">\n                <div id=\"soldier-amounts-5YY0a\" class=\"block-amounts\">\n                <pick-list data-date=\"2025-07-01\" class=\"2QWfL\" id=\"pick-list-5YY0a\" data-start=\"\" data-end=\"\" data-task-name=\"\" placeholder=\"בחר חייל..\"></pick-list>\n                </div>\n                <button onclick=\"addSoldierToBlock('5YY0a')\" class=\"add-soldier-btn\">+</button>\n                <button onclick=\"removeSoldierFromBlock('5YY0a')\" class=\"remove-soldier-btn\">-</button>\n\n                </td>\n              </tr>\n            </tbody>\n          </table>\n          <div class=\"add-block-btn-wraper\">\n          <button onclick=\"addNewBlock('2QWfL','task-body-2QWfL')\" class=\"add-block-btn\">+</button>\n          <button onclick=\"removeBlock('2QWfL','task-body-2QWfL')\" class=\"remove-block-btn\">-</button>\n          </div>\n        </div>",
+//             "taskName": "שג"
+//         }
+//     ]
 // }
