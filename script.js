@@ -23,7 +23,7 @@ $(document).ready(() => {
   SOLIDIER_HERE_GLOBAL = JSON.parse(localStorage.getItem("solidierHere")) || [];
 
   //RenderTasksList(TASK_GLOBAL); // Render existing tasks
-  RenderTaskList2(); // Render tasks from TASK_GLOBAL2
+  //RenderTaskList2(); // Render tasks from TASK_GLOBAL2
   // show and hide modal
   $("#addTaskBtn").click(addTask);
   $("#close-modal").click(() => {
@@ -1246,7 +1246,6 @@ const moveto = (locationName) => {
   return;
   window.location.href = `${locationName}.html`;
 };
-
 const saveToserver = () => {
   TASK_GLOBAL2 = JSON.parse(localStorage.getItem("tasks2")) || [];
   SHIFTS_GLOBAL = JSON.parse(localStorage.getItem("shifts")) || [];
@@ -1309,6 +1308,8 @@ const getFromServer = () => {
         "solidierHere",
         JSON.stringify(SOLIDIER_HERE_GLOBAL)
       );
+      RenderTaskList2();
+      renderShifts();
       Swal.fire({
         title: "הנתונים נטענו בהצלחה!",
         icon: "success",
