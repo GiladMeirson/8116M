@@ -1128,7 +1128,9 @@ const exportScheduleToPDF = async () => {
   const scheduleContent = document.createElement("div");
   scheduleContent.innerHTML = `
     <div style="text-align: center; margin-bottom: 20px; background-color: #ffffff; padding: 10px;">
-      <h1 style="color: #000000; font-size: 24px; margin-bottom: 10px;">לוח משמרות - ${formatDate(new Date(TOM_DATE))}</h1>
+      <h1 style="color: #000000; font-size: 24px; margin-bottom: 10px;">לוח משמרות - ${formatDate(
+        new Date(TOM_DATE)
+      )}</h1>
       <p style="color: #000000; font-size: 16px;">תאריך: ${TOM_DATE}</p>
     </div>
   `;
@@ -1144,36 +1146,46 @@ const exportScheduleToPDF = async () => {
     .forEach((el) => el.remove());
 
   // Replace input fields with their values
-  tasksClone.querySelectorAll('input[type="time"], input[type="date"], input[type="text"]').forEach((input) => {
-    const span = document.createElement("span");
-    span.textContent = input.value || "";
-    span.className = input.className;
-    
-    // Force inline styles for better rendering
-    const computedStyle = window.getComputedStyle(input);
-    span.style.cssText = `
+  tasksClone
+    .querySelectorAll(
+      'input[type="time"], input[type="date"], input[type="text"]'
+    )
+    .forEach((input) => {
+      const span = document.createElement("span");
+      span.textContent = input.value || "";
+      span.className = input.className;
+
+      // Force inline styles for better rendering
+      const computedStyle = window.getComputedStyle(input);
+      span.style.cssText = `
       color: #000000;
-      background-color: ${input.classList.contains('task-title') ? computedStyle.backgroundColor || '#ffffff' : '#ffffff'};
+      background-color: ${
+        input.classList.contains("task-title")
+          ? computedStyle.backgroundColor || "#ffffff"
+          : "#ffffff"
+      };
       border: none;
       padding: 2px 5px;
       display: inline-block;
-      font-weight: ${input.classList.contains('task-title') ? 'bold' : 'normal'};
+      font-weight: ${
+        input.classList.contains("task-title") ? "bold" : "normal"
+      };
       font-size: 14px;
       width: auto;
       min-width: 100px;
     `;
-    input.parentNode.replaceChild(span, input);
-  });
+      input.parentNode.replaceChild(span, input);
+    });
 
   // Replace pick-lists with soldier names from SHIFTS_GLOBAL
   tasksClone.querySelectorAll("pick-list").forEach((pickList) => {
     const pickListId = pickList.id;
     const blockId = pickListId.replace("pick-list-", "");
-    
+
     // Find the corresponding shift
-    const shift = SHIFTS_GLOBAL.find(shift => shift.blockID === blockId);
+    const shift = SHIFTS_GLOBAL.find((shift) => shift.blockID === blockId);
     const soldierName = shift ? shift.soldierName : "לא שובץ";
-    
+
     const span = document.createElement("span");
     span.textContent = soldierName;
     span.style.cssText = `
@@ -1208,64 +1220,74 @@ const exportScheduleToPDF = async () => {
 
   // Function to get contrasting text color based on background
   const getContrastColor = (hexColor) => {
-    if (!hexColor || hexColor === 'transparent') return '#000000';
-    
-    const color = hexColor.replace('#', '').replace('rgb(', '').replace(')', '');
-    
-    if (color.includes(',')) {
+    if (!hexColor || hexColor === "transparent") return "#000000";
+
+    const color = hexColor
+      .replace("#", "")
+      .replace("rgb(", "")
+      .replace(")", "");
+
+    if (color.includes(",")) {
       // Handle rgb format
-      const [r, g, b] = color.split(',').map(num => parseInt(num.trim()));
+      const [r, g, b] = color.split(",").map((num) => parseInt(num.trim()));
       const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-      return luminance > 0.5 ? '#000000' : '#ffffff';
+      return luminance > 0.5 ? "#000000" : "#ffffff";
     } else {
       // Handle hex format
       const r = parseInt(color.substr(0, 2), 16);
       const g = parseInt(color.substr(2, 2), 16);
       const b = parseInt(color.substr(4, 2), 16);
       const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-      return luminance > 0.5 ? '#000000' : '#ffffff';
+      return luminance > 0.5 ? "#000000" : "#ffffff";
     }
   };
 
   // Function to lighten a color for better readability
   const lightenColor = (hexColor, percent) => {
-    if (!hexColor || hexColor === 'transparent') return '#ffffff';
-    
+    if (!hexColor || hexColor === "transparent") return "#ffffff";
+
     let color = hexColor;
-    if (color.includes('rgb')) {
+    if (color.includes("rgb")) {
       // Convert rgb to hex first
       const rgb = color.match(/\d+/g);
       const r = parseInt(rgb[0]);
       const g = parseInt(rgb[1]);
       const b = parseInt(rgb[2]);
-      color = `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+      color = `#${r.toString(16).padStart(2, "0")}${g
+        .toString(16)
+        .padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
     }
-    
-    color = color.replace('#', '');
+
+    color = color.replace("#", "");
     const r = parseInt(color.substr(0, 2), 16);
     const g = parseInt(color.substr(2, 2), 16);
     const b = parseInt(color.substr(4, 2), 16);
-    
-    const newR = Math.min(255, Math.floor(r + (255 - r) * percent / 100));
-    const newG = Math.min(255, Math.floor(g + (255 - g) * percent / 100));
-    const newB = Math.min(255, Math.floor(b + (255 - b) * percent / 100));
-    
-    return `#${newR.toString(16).padStart(2, '0')}${newG.toString(16).padStart(2, '0')}${newB.toString(16).padStart(2, '0')}`;
+
+    const newR = Math.min(255, Math.floor(r + ((255 - r) * percent) / 100));
+    const newG = Math.min(255, Math.floor(g + ((255 - g) * percent) / 100));
+    const newB = Math.min(255, Math.floor(b + ((255 - b) * percent) / 100));
+
+    return `#${newR.toString(16).padStart(2, "0")}${newG
+      .toString(16)
+      .padStart(2, "0")}${newB.toString(16).padStart(2, "0")}`;
   };
 
   // Force all inline styles for better html2canvas compatibility
   const allElements = scheduleContent.querySelectorAll("*");
   allElements.forEach((el, index) => {
     const computedStyle = window.getComputedStyle(el);
-    
+
     // Force background color
-    if (!el.style.backgroundColor || el.style.backgroundColor === 'transparent') {
-      el.style.backgroundColor = '#ffffff';
+    if (
+      !el.style.backgroundColor ||
+      el.style.backgroundColor === "transparent"
+    ) {
+      el.style.backgroundColor = "#ffffff";
     }
-    
+
     // Force text color
-    el.style.color = '#000000';
-    
+    el.style.color = "#000000";
+
     // Handle different element types
     if (el.tagName === "TABLE") {
       el.style.cssText = `
@@ -1276,7 +1298,7 @@ const exportScheduleToPDF = async () => {
         border: 2px solid #333333;
       `;
     }
-    
+
     if (el.tagName === "TH" || el.tagName === "TD") {
       el.style.cssText = `
         border: 1px solid #333333;
@@ -1287,31 +1309,35 @@ const exportScheduleToPDF = async () => {
         vertical-align: middle;
       `;
     }
-    
+
     if (el.tagName === "TH") {
       el.style.backgroundColor = "#e0e0e0";
       el.style.fontWeight = "bold";
       el.style.color = "#000000";
     }
-    
+
     // Handle task headers (H2 elements) with their original colors
     if (el.tagName === "H2") {
-      const originalInput = el.querySelector('input') || el.querySelector('span');
-      let originalBgColor = '#f0f0f0';
-      
+      const originalInput =
+        el.querySelector("input") || el.querySelector("span");
+      let originalBgColor = "#f0f0f0";
+
       if (originalInput) {
         const inputStyle = window.getComputedStyle(originalInput);
         originalBgColor = inputStyle.backgroundColor || originalBgColor;
       }
-      
+
       // If it's still transparent or not set, try to get from the element itself
-      if (originalBgColor === 'transparent' || originalBgColor === 'rgba(0, 0, 0, 0)') {
+      if (
+        originalBgColor === "transparent" ||
+        originalBgColor === "rgba(0, 0, 0, 0)"
+      ) {
         const h2Style = window.getComputedStyle(el);
         originalBgColor = h2Style.backgroundColor || getBrightColor(index + 1);
       }
-      
+
       const textColor = getContrastColor(originalBgColor);
-      
+
       el.style.cssText = `
         margin: 15px 0 10px 0;
         padding: 15px;
@@ -1330,26 +1356,26 @@ const exportScheduleToPDF = async () => {
   const tables = scheduleContent.querySelectorAll("table");
   tables.forEach((table, tableIndex) => {
     const rows = table.querySelectorAll("tbody tr");
-    
+
     // Get the task color from the header (H2) of this table's container
-    const tableContainer = table.closest('.table-container');
-    const header = tableContainer?.querySelector('h2');
+    const tableContainer = table.closest(".table-container");
+    const header = tableContainer?.querySelector("h2");
     let taskColor = getBrightColor(tableIndex + 1);
-    
+
     if (header) {
       const headerStyle = window.getComputedStyle(header);
       taskColor = headerStyle.backgroundColor || taskColor;
     }
-    
+
     const lightTaskColor = lightenColor(taskColor, 85);
     const veryLightTaskColor = lightenColor(taskColor, 95);
-    
+
     rows.forEach((row, rowIndex) => {
       const rowColor = rowIndex % 2 === 0 ? lightTaskColor : veryLightTaskColor;
       row.style.backgroundColor = rowColor;
-      
+
       const cells = row.querySelectorAll("td");
-      cells.forEach(cell => {
+      cells.forEach((cell) => {
         cell.style.backgroundColor = rowColor;
         cell.style.color = "#000000";
         cell.style.border = "1px solid #333333";
@@ -1362,7 +1388,7 @@ const exportScheduleToPDF = async () => {
 
   try {
     // Wait for styles to apply
-    await new Promise(resolve => setTimeout(resolve, 200));
+    await new Promise((resolve) => setTimeout(resolve, 200));
 
     const canvas = await html2canvas(scheduleContent, {
       scale: 2,
@@ -1376,15 +1402,18 @@ const exportScheduleToPDF = async () => {
       onclone: (clonedDoc) => {
         // Force all elements in cloned document to have proper styles
         const clonedElements = clonedDoc.querySelectorAll("*");
-        clonedElements.forEach(el => {
-          if (!el.style.backgroundColor || el.style.backgroundColor === "transparent") {
+        clonedElements.forEach((el) => {
+          if (
+            !el.style.backgroundColor ||
+            el.style.backgroundColor === "transparent"
+          ) {
             el.style.backgroundColor = "#ffffff";
           }
           if (!el.style.color) {
             el.style.color = "#000000";
           }
         });
-      }
+      },
     });
 
     const imgData = canvas.toDataURL("image/png", 1.0);
@@ -1412,7 +1441,9 @@ const exportScheduleToPDF = async () => {
     }
 
     // Save the PDF
-    const fileName = `schedule-${TOM_DATE}-${formatDate(new Date(TOM_DATE)).replace(/\s+/g, '-')}.pdf`;
+    const fileName = `schedule-${TOM_DATE}-${formatDate(
+      new Date(TOM_DATE)
+    ).replace(/\s+/g, "-")}.pdf`;
     pdf.save(fileName);
 
     Swal.fire({
@@ -1421,7 +1452,6 @@ const exportScheduleToPDF = async () => {
       icon: "success",
       confirmButtonText: "אישור",
     });
-
   } catch (error) {
     console.error("Error generating PDF:", error);
     Swal.fire({
@@ -1448,7 +1478,7 @@ const moveto = (locationName) => {
     cancelButtonText: "לא, המשך בלי לשמור",
   }).then((result) => {
     if (result.isConfirmed) {
-      saveToserver();
+      //saveToserver();
       setTimeout(() => {
         window.location.href = `${locationName}.html`;
       }, 1000);
@@ -1459,6 +1489,12 @@ const moveto = (locationName) => {
   return;
   window.location.href = `${locationName}.html`;
 };
+
+
+
+
+
+
 const saveToserver = () => {
   TASK_GLOBAL2 = JSON.parse(localStorage.getItem("tasks2")) || [];
   SHIFTS_GLOBAL = JSON.parse(localStorage.getItem("shifts")) || [];
@@ -1469,64 +1505,54 @@ const saveToserver = () => {
     soldiersHere: SOLIDIER_HERE_GLOBAL,
   };
   $(".loader").show();
+  Save('Data', dataToSave);
 
-  fetch(`${API_PREFIX}/api/data`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(dataToSave),
-  })
-    .then((response) => {
-      $(".loader").hide();
+  // fetch(`${API_PREFIX}/api/data`, {
+  //   method: "POST",
+  //   headers: {
+  //     "Content-Type": "application/json",
+  //   },
+  //   body: JSON.stringify(dataToSave),
+  // })
+  //   .then((response) => {
+  //     $(".loader").hide();
 
-      if (!response.ok) {
-        throw new Error("Network response was not ok");
-      }
-      return response.json();
-    })
-    .then((data) => {
-      console.log("Data saved successfully:", data);
-      Swal.fire({
-        title: "הנתונים נשמרו בהצלחה!",
-        icon: "success",
-        confirmButtonText: "אישור",
-      });
-    })
-    .catch((error) => {
-      $(".loader").hide();
-      console.error("Error saving data:", error);
-      Swal.fire({
-        title: "שגיאה בשמירת הנתונים",
-        text: "אירעה שגיאה בעת שמירת הנתונים לשרת\nתפנה לסיני 051-2122453",
-        icon: "error",
-        confirmButtonText: "אישור",
-      });
-    });
+  //     if (!response.ok) {
+  //       throw new Error("Network response was not ok");
+  //     }
+  //     return response.json();
+  //   })
+  //   .then((data) => {
+  //     console.log("Data saved successfully:", data);
+  //     Swal.fire({
+  //       title: "הנתונים נשמרו בהצלחה!",
+  //       icon: "success",
+  //       confirmButtonText: "אישור",
+  //     });
+  //   })
+  //   .catch((error) => {
+  //     $(".loader").hide();
+  //     console.error("Error saving data:", error);
+  //     Swal.fire({
+  //       title: "שגיאה בשמירת הנתונים",
+  //       text: "אירעה שגיאה בעת שמירת הנתונים לשרת\nתפנה לסיני 051-2122453",
+  //       icon: "error",
+  //       confirmButtonText: "אישור",
+  //     });
+  //   });
 };
 
 const getFromServer = () => {
   $(".loader").show();
-  fetch(`${API_PREFIX}/api/data`)
-    .then((response) => {
-      if (!response.ok) {
-        throw new Error("Network response was not ok");
-      }
-      return response.json();
-    })
-    .then((data) => {
-      $(".loader").hide();
-      // Assuming data contains tasks, shifts, and soldiersHere
-      TASK_GLOBAL2 = data.data.tasks || [];
-      SHIFTS_GLOBAL = data.data.shift || [];
-      SOLIDIER_HERE_GLOBAL = data.data.soldiersHere || [];
-      console.log("Data fetched successfully:", data);
+  ReadFrom('Data', (data) => {
+    $(".loader").hide();
+    if (data) {
+      TASK_GLOBAL2 = data.tasks || [];
+      SHIFTS_GLOBAL = data.shifts || [];
+      SOLIDIER_HERE_GLOBAL = data.soldiersHere || [];
       localStorage.setItem("tasks2", JSON.stringify(TASK_GLOBAL2));
       localStorage.setItem("shifts", JSON.stringify(SHIFTS_GLOBAL));
-      localStorage.setItem(
-        "solidierHere",
-        JSON.stringify(SOLIDIER_HERE_GLOBAL)
-      );
+      localStorage.setItem("solidierHere", JSON.stringify(SOLIDIER_HERE_GLOBAL));
       RenderTaskList2();
       renderShifts();
       Swal.fire({
@@ -1534,15 +1560,13 @@ const getFromServer = () => {
         icon: "success",
         confirmButtonText: "אישור",
       });
-    })
-    .catch((error) => {
-      $(".loader").hide();
-      console.error("Error fetching data:", error);
+    } else {
       Swal.fire({
         title: "שגיאה בטעינת הנתונים",
-        text: "אירעה שגיאה בעת טעינת הנתונים מהשרת\nתפנה לסיני 051-2122453",
+        text: "לא נמצאו נתונים בשרת",
         icon: "error",
         confirmButtonText: "אישור",
       });
-    });
+    }
+  });
 };

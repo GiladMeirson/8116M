@@ -8,6 +8,15 @@
     <link rel="stylesheet" href="./style.css" />
     <script src="./solidjer.js"></script>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <!-- The core Firebase JS SDK is always required and must be listed first -->
+    <script src="https://www.gstatic.com/firebasejs/7.14.6/firebase-app.js"></script>
+    <!-- TODO: Add SDKs for Firebase products that you want to use
+    https://firebase.google.com/docs/web/setup#available-libraries -->
+    <script src="https://www.gstatic.com/firebasejs/7.14.6/firebase-analytics.js"></script>
+    <!--**** Remember to add the database script ***-->
+    <script src="https://www.gstatic.com/firebasejs/7.14.6/firebase-database.js"></script>
+    <script src="./config.js"></script>
+    <script src="./firebase.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -37,7 +46,7 @@
         </button>
 
         <button class="btn" onclick="saveToserver()" id="edit-task">
-         שמור שינויים 💾
+          שמור שינויים 💾
         </button>
       </div>
       <div id="tasks-container" class="tasks-container">
