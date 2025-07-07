@@ -1066,17 +1066,17 @@ const checkShiftColids = (allSoldierShifts, shiftToCheck) => {
       continue; // Skip shifts that are not in the same block
     }
     let startTimeStamp = new Date(
-      shift.block.blockDate + "T" + shift.startTime
+      shift.block.blockStartDate + "T" + shift.startTime
     ).getTime();
     let endTimeStamp = new Date(
-      shift.block.blockDate + "T" + shift.endTime
+      shift.block.blockEndDate + "T" + shift.endTime
     ).getTime();
 
     let checkStartTimeStamp = new Date(
-      shiftToCheck.block.blockDate + "T" + shiftToCheck.startTime
+      shiftToCheck.block.blockStartDate + "T" + shiftToCheck.startTime
     ).getTime();
     let checkEndTimeStamp = new Date(
-      shiftToCheck.block.blockDate + "T" + shiftToCheck.endTime
+      shiftToCheck.block.blockEndDate + "T" + shiftToCheck.endTime
     ).getTime();
 
     if (
