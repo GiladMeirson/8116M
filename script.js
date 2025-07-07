@@ -819,8 +819,8 @@ const handleMouseOverPickList = (e) => {
         calculateDuration(
           last_shift.endTime,
           currentBlock.startTime,
-          last_shift.block.blockDate,
-          currentBlock.blockDate
+          last_shift.block.blockEndDate,
+          currentBlock.blockEndDate
         )
       ),
     });
