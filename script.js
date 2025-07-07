@@ -35,7 +35,7 @@ $(document).ready(() => {
   $("#ishereINDATEtommorrow").val(day2after);
   $("#header-date").change(handleMainDateChange);
   //$(document).on("mouseover", "pick-list *", handleMouseOverPickList);
-  renderShifts();
+  //renderShifts();
 });
 
 const initPickList = () => {
@@ -358,6 +358,8 @@ const addNewTask = () => {
     TaskToSave.blocks.push({
       blockID: blockID,
       blockDate: TOM_DATE,
+      blockStartDate: TOM_DATE,
+      blockEndDate: TOM_DATE,
       startTime: "09:00",
       endTime: "13:00",
       duration: calculateDuration("09:00", "13:00"),
@@ -445,17 +447,21 @@ const addNewBlock = (taskID, containerBodyID) => {
   let newBlock = {
     blockID: blockID,
     blockDate: lastBlock.blockDate,
+    blockEndDate: lastBlock.blockEndDate,
+    blockStartDate: lastBlock.blockEndDate,
     startTime: lastBlock.endTime,
     endTime: incrementHour(lastBlock.endTime, blockDuration),
     duration: calculateDuration(lastBlock.startTime, lastBlock.endTime),
     soldierAmount: lastBlock.soldierAmount,
   };
-  let startDate = new Date().setHours(parseInt(newBlock.startTime.split(":")[0]));
+  let startDate = new Date().setHours(
+    parseInt(newBlock.startTime.split(":")[0])
+  );
   let endDate = new Date().setHours(parseInt(newBlock.endTime.split(":")[0]));
   if (startDate > endDate) {
-    newBlock.blockDate = new Date(newBlock.blockDate)
-    newBlock.blockDate.setDate(newBlock.blockDate.getDate() + 1);
-    newBlock.blockDate = newBlock.blockDate.toISOString().split("T")[0]; // Format to YYYY-MM-DD
+    newBlock.blockEndDate = new Date(newBlock.blockDate);
+    newBlock.blockEndDate.setDate(newBlock.blockEndDate.getDate() + 1);
+    newBlock.blockEndDate = newBlock.blockEndDate.toISOString().split("T")[0]; // Format to YYYY-MM-DD
   }
 
   ThisTask.blocks.push(newBlock);
@@ -478,10 +484,10 @@ const addNewBlock = (taskID, containerBodyID) => {
                 <td class="task-time">
                 <div class="block-date-wraper">
                   <span id="block-date-${blockID}" class="block-date">${formatDate(
-    new Date(newBlock.blockDate)
+    new Date(newBlock.blockEndDate)
   )}</span>
                   <input type="date" onChange = "handleDateChange(this,'${blockID}')" class="start-time timeIN" value="${
-    newBlock.blockDate
+    newBlock.blockEndDate
   }" />
                 </div>
                 <div class="ttime-block-wraper">
@@ -1232,7 +1238,7 @@ const moveto = (locationName) => {
     icon: "question",
     showCancelButton: true,
     confirmButtonText: "כן, שמור",
-    cancelButtonText: "לא, המשך בלי לשמור"
+    cancelButtonText: "לא, המשך בלי לשמור",
   }).then((result) => {
     if (result.isConfirmed) {
       saveToserver();
@@ -1255,6 +1261,7 @@ const saveToserver = () => {
     shifts: SHIFTS_GLOBAL,
     soldiersHere: SOLIDIER_HERE_GLOBAL,
   };
+  $(".loader").show();
 
   fetch(`${API_PREFIX}/api/data`, {
     method: "POST",
@@ -1264,6 +1271,8 @@ const saveToserver = () => {
     body: JSON.stringify(dataToSave),
   })
     .then((response) => {
+      $(".loader").hide();
+
       if (!response.ok) {
         throw new Error("Network response was not ok");
       }
@@ -1278,17 +1287,19 @@ const saveToserver = () => {
       });
     })
     .catch((error) => {
+      $(".loader").hide();
       console.error("Error saving data:", error);
       Swal.fire({
         title: "שגיאה בשמירת הנתונים",
         text: "אירעה שגיאה בעת שמירת הנתונים לשרת\nתפנה לסיני 051-2122453",
-        icon: "error", 
+        icon: "error",
         confirmButtonText: "אישור",
       });
     });
 };
 
 const getFromServer = () => {
+  $(".loader").show();
   fetch(`${API_PREFIX}/api/data`)
     .then((response) => {
       if (!response.ok) {
@@ -1297,6 +1308,7 @@ const getFromServer = () => {
       return response.json();
     })
     .then((data) => {
+      $(".loader").hide();
       // Assuming data contains tasks, shifts, and soldiersHere
       TASK_GLOBAL2 = data.data.tasks || [];
       SHIFTS_GLOBAL = data.data.shift || [];
@@ -1317,9 +1329,10 @@ const getFromServer = () => {
       });
     })
     .catch((error) => {
+      $(".loader").hide();
       console.error("Error fetching data:", error);
       Swal.fire({
-        title: "שגיאה בטעינת הנתונים", 
+        title: "שגיאה בטעינת הנתונים",
         text: "אירעה שגיאה בעת טעינת הנתונים מהשרת\nתפנה לסיני 051-2122453",
         icon: "error",
         confirmButtonText: "אישור",
