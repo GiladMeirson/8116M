@@ -1122,6 +1122,7 @@ const getColorForDurationSpan = (
     return "#4CAF50";
   }
 };
+
 const exportScheduleToPDF = async () => {
   // Create a clean version of the schedule for PDF
   const scheduleContent = document.createElement("div");
@@ -1149,6 +1150,8 @@ const exportScheduleToPDF = async () => {
       const span = document.createElement("span");
       span.textContent = input.value;
       span.className = input.className;
+      span.style.color = "#000000"; // Force black text
+      span.style.backgroundColor = "transparent";
       input.parentNode.replaceChild(span, input);
     });
 
@@ -1156,25 +1159,44 @@ const exportScheduleToPDF = async () => {
   tasksClone.querySelectorAll("pick-list").forEach((pickList) => {
     const span = document.createElement("span");
     span.textContent = pickList.value || "לא שובץ";
-    span.style.padding = "5px";
-    span.style.border = "1px solid #ccc";
-    span.style.display = "inline-block";
-    span.style.margin = "2px";
+    span.style.cssText = `
+      padding: 5px;
+      border: 1px solid #ccc;
+      display: inline-block;
+      margin: 2px;
+      color: #000000;
+      background-color: #ffffff;
+    `;
     pickList.parentNode.replaceChild(span, pickList);
   });
 
   scheduleContent.appendChild(tasksClone);
 
-  // Apply PDF-friendly styles
+  // Apply PDF-friendly styles with forced light theme
   scheduleContent.style.cssText = `
     font-family: Arial, sans-serif;
     direction: rtl;
     text-align: right;
     max-width: 800px;
     margin: 0 auto;
-    background: white;
+    background: #ffffff !important;
     padding: 20px;
+    color: #000000 !important;
+    color-scheme: light !important;
   `;
+
+  // Force light colors on all elements
+  scheduleContent.querySelectorAll("*").forEach((el) => {
+    const computedStyle = window.getComputedStyle(el);
+    if (computedStyle.backgroundColor === "transparent" || 
+        computedStyle.backgroundColor === "rgba(0, 0, 0, 0)") {
+      el.style.backgroundColor = "#ffffff";
+    }
+    if (computedStyle.color === "rgb(255, 255, 255)" || 
+        computedStyle.color === "#ffffff") {
+      el.style.color = "#000000";
+    }
+  });
 
   // Add to document temporarily
   document.body.appendChild(scheduleContent);
@@ -1185,6 +1207,11 @@ const exportScheduleToPDF = async () => {
       useCORS: true,
       allowTaint: true,
       backgroundColor: "#ffffff",
+      foreignObjectRendering: false, // This can help with consistency
+      ignoreElements: (element) => {
+        // Ignore any elements that might have dark themes
+        return element.classList.contains('dark-theme');
+      }
     });
 
     const imgData = canvas.toDataURL("image/png");
