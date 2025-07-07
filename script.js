@@ -1127,13 +1127,13 @@ const exportScheduleToPDF = async () => {
   // Create a clean version of the schedule for PDF
   const scheduleContent = document.createElement("div");
   scheduleContent.innerHTML = `
-    <div style="text-align: center; margin-bottom: 20px;">
-      <h1>לוח משמרות - ${formatDate(new Date(TOM_DATE))}</h1>
-      <p>תאריך: ${TOM_DATE}</p>
+    <div style="text-align: center; margin-bottom: 20px; background-color: #ffffff; padding: 10px;">
+      <h1 style="color: #000000; font-size: 24px; margin-bottom: 10px;">לוח משמרות - ${formatDate(new Date(TOM_DATE))}</h1>
+      <p style="color: #000000; font-size: 16px;">תאריך: ${TOM_DATE}</p>
     </div>
   `;
 
-  // Clone tasks container without edit buttons
+  // Clone tasks container
   const tasksClone = document.getElementById("tasks-container").cloneNode(true);
 
   // Remove edit elements from clone
@@ -1143,92 +1143,267 @@ const exportScheduleToPDF = async () => {
     )
     .forEach((el) => el.remove());
 
-  // Remove input fields and replace with text
-  tasksClone
-    .querySelectorAll('input[type="time"], input[type="date"]')
-    .forEach((input) => {
-      const span = document.createElement("span");
-      span.textContent = input.value;
-      span.className = input.className;
-      span.style.color = "#000000"; // Force black text
-      span.style.backgroundColor = "transparent";
-      input.parentNode.replaceChild(span, input);
-    });
-
-  // Replace pick-lists with selected values
-  tasksClone.querySelectorAll("pick-list").forEach((pickList) => {
+  // Replace input fields with their values
+  tasksClone.querySelectorAll('input[type="time"], input[type="date"], input[type="text"]').forEach((input) => {
     const span = document.createElement("span");
-    span.textContent = pickList.value || "לא שובץ";
+    span.textContent = input.value || "";
+    span.className = input.className;
+    
+    // Force inline styles for better rendering
+    const computedStyle = window.getComputedStyle(input);
     span.style.cssText = `
-      padding: 5px;
-      border: 1px solid #ccc;
+      color: #000000;
+      background-color: ${input.classList.contains('task-title') ? computedStyle.backgroundColor || '#ffffff' : '#ffffff'};
+      border: none;
+      padding: 2px 5px;
+      display: inline-block;
+      font-weight: ${input.classList.contains('task-title') ? 'bold' : 'normal'};
+      font-size: 14px;
+      width: auto;
+      min-width: 100px;
+    `;
+    input.parentNode.replaceChild(span, input);
+  });
+
+  // Replace pick-lists with soldier names from SHIFTS_GLOBAL
+  tasksClone.querySelectorAll("pick-list").forEach((pickList) => {
+    const pickListId = pickList.id;
+    const blockId = pickListId.replace("pick-list-", "");
+    
+    // Find the corresponding shift
+    const shift = SHIFTS_GLOBAL.find(shift => shift.blockID === blockId);
+    const soldierName = shift ? shift.soldierName : "לא שובץ";
+    
+    const span = document.createElement("span");
+    span.textContent = soldierName;
+    span.style.cssText = `
+      padding: 8px 12px;
+      border: 1px solid #333333;
       display: inline-block;
       margin: 2px;
       color: #000000;
-      background-color: #ffffff;
+      background-color: #f0f0f0;
+      border-radius: 4px;
+      font-size: 14px;
+      min-width: 100px;
+      text-align: center;
     `;
     pickList.parentNode.replaceChild(span, pickList);
   });
 
   scheduleContent.appendChild(tasksClone);
 
-  // Apply PDF-friendly styles with forced light theme
+  // Apply comprehensive PDF-friendly styles to container
   scheduleContent.style.cssText = `
-    font-family: Arial, sans-serif;
+    font-family: Arial, Helvetica, sans-serif;
     direction: rtl;
     text-align: right;
     max-width: 800px;
     margin: 0 auto;
-    background: #ffffff !important;
+    background-color: #ffffff;
     padding: 20px;
-    color: #000000 !important;
-    color-scheme: light !important;
+    color: #000000;
+    line-height: 1.4;
   `;
 
-  // Force light colors on all elements
-  scheduleContent.querySelectorAll("*").forEach((el) => {
-    const computedStyle = window.getComputedStyle(el);
-    if (computedStyle.backgroundColor === "transparent" || 
-        computedStyle.backgroundColor === "rgba(0, 0, 0, 0)") {
-      el.style.backgroundColor = "#ffffff";
+  // Function to get contrasting text color based on background
+  const getContrastColor = (hexColor) => {
+    if (!hexColor || hexColor === 'transparent') return '#000000';
+    
+    const color = hexColor.replace('#', '').replace('rgb(', '').replace(')', '');
+    
+    if (color.includes(',')) {
+      // Handle rgb format
+      const [r, g, b] = color.split(',').map(num => parseInt(num.trim()));
+      const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+      return luminance > 0.5 ? '#000000' : '#ffffff';
+    } else {
+      // Handle hex format
+      const r = parseInt(color.substr(0, 2), 16);
+      const g = parseInt(color.substr(2, 2), 16);
+      const b = parseInt(color.substr(4, 2), 16);
+      const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+      return luminance > 0.5 ? '#000000' : '#ffffff';
     }
-    if (computedStyle.color === "rgb(255, 255, 255)" || 
-        computedStyle.color === "#ffffff") {
+  };
+
+  // Function to lighten a color for better readability
+  const lightenColor = (hexColor, percent) => {
+    if (!hexColor || hexColor === 'transparent') return '#ffffff';
+    
+    let color = hexColor;
+    if (color.includes('rgb')) {
+      // Convert rgb to hex first
+      const rgb = color.match(/\d+/g);
+      const r = parseInt(rgb[0]);
+      const g = parseInt(rgb[1]);
+      const b = parseInt(rgb[2]);
+      color = `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+    }
+    
+    color = color.replace('#', '');
+    const r = parseInt(color.substr(0, 2), 16);
+    const g = parseInt(color.substr(2, 2), 16);
+    const b = parseInt(color.substr(4, 2), 16);
+    
+    const newR = Math.min(255, Math.floor(r + (255 - r) * percent / 100));
+    const newG = Math.min(255, Math.floor(g + (255 - g) * percent / 100));
+    const newB = Math.min(255, Math.floor(b + (255 - b) * percent / 100));
+    
+    return `#${newR.toString(16).padStart(2, '0')}${newG.toString(16).padStart(2, '0')}${newB.toString(16).padStart(2, '0')}`;
+  };
+
+  // Force all inline styles for better html2canvas compatibility
+  const allElements = scheduleContent.querySelectorAll("*");
+  allElements.forEach((el, index) => {
+    const computedStyle = window.getComputedStyle(el);
+    
+    // Force background color
+    if (!el.style.backgroundColor || el.style.backgroundColor === 'transparent') {
+      el.style.backgroundColor = '#ffffff';
+    }
+    
+    // Force text color
+    el.style.color = '#000000';
+    
+    // Handle different element types
+    if (el.tagName === "TABLE") {
+      el.style.cssText = `
+        border-collapse: collapse;
+        width: 100%;
+        margin: 10px 0;
+        background-color: #ffffff;
+        border: 2px solid #333333;
+      `;
+    }
+    
+    if (el.tagName === "TH" || el.tagName === "TD") {
+      el.style.cssText = `
+        border: 1px solid #333333;
+        padding: 8px;
+        text-align: center;
+        color: #000000;
+        background-color: #ffffff;
+        vertical-align: middle;
+      `;
+    }
+    
+    if (el.tagName === "TH") {
+      el.style.backgroundColor = "#e0e0e0";
+      el.style.fontWeight = "bold";
       el.style.color = "#000000";
+    }
+    
+    // Handle task headers (H2 elements) with their original colors
+    if (el.tagName === "H2") {
+      const originalInput = el.querySelector('input') || el.querySelector('span');
+      let originalBgColor = '#f0f0f0';
+      
+      if (originalInput) {
+        const inputStyle = window.getComputedStyle(originalInput);
+        originalBgColor = inputStyle.backgroundColor || originalBgColor;
+      }
+      
+      // If it's still transparent or not set, try to get from the element itself
+      if (originalBgColor === 'transparent' || originalBgColor === 'rgba(0, 0, 0, 0)') {
+        const h2Style = window.getComputedStyle(el);
+        originalBgColor = h2Style.backgroundColor || getBrightColor(index + 1);
+      }
+      
+      const textColor = getContrastColor(originalBgColor);
+      
+      el.style.cssText = `
+        margin: 15px 0 10px 0;
+        padding: 15px;
+        border-radius: 8px;
+        background-color: ${originalBgColor};
+        color: ${textColor};
+        text-align: center;
+        font-weight: bold;
+        font-size: 18px;
+        border: 2px solid #333333;
+      `;
     }
   });
 
-  // Add to document temporarily
+  // Add alternating row colors for better readability
+  const tables = scheduleContent.querySelectorAll("table");
+  tables.forEach((table, tableIndex) => {
+    const rows = table.querySelectorAll("tbody tr");
+    
+    // Get the task color from the header (H2) of this table's container
+    const tableContainer = table.closest('.table-container');
+    const header = tableContainer?.querySelector('h2');
+    let taskColor = getBrightColor(tableIndex + 1);
+    
+    if (header) {
+      const headerStyle = window.getComputedStyle(header);
+      taskColor = headerStyle.backgroundColor || taskColor;
+    }
+    
+    const lightTaskColor = lightenColor(taskColor, 85);
+    const veryLightTaskColor = lightenColor(taskColor, 95);
+    
+    rows.forEach((row, rowIndex) => {
+      const rowColor = rowIndex % 2 === 0 ? lightTaskColor : veryLightTaskColor;
+      row.style.backgroundColor = rowColor;
+      
+      const cells = row.querySelectorAll("td");
+      cells.forEach(cell => {
+        cell.style.backgroundColor = rowColor;
+        cell.style.color = "#000000";
+        cell.style.border = "1px solid #333333";
+      });
+    });
+  });
+
+  // Add to document temporarily for rendering
   document.body.appendChild(scheduleContent);
 
   try {
+    // Wait for styles to apply
+    await new Promise(resolve => setTimeout(resolve, 200));
+
     const canvas = await html2canvas(scheduleContent, {
       scale: 2,
       useCORS: true,
       allowTaint: true,
       backgroundColor: "#ffffff",
-      foreignObjectRendering: false, // This can help with consistency
-      ignoreElements: (element) => {
-        // Ignore any elements that might have dark themes
-        return element.classList.contains('dark-theme');
+      foreignObjectRendering: false,
+      logging: true,
+      letterRendering: true,
+      removeContainer: false,
+      onclone: (clonedDoc) => {
+        // Force all elements in cloned document to have proper styles
+        const clonedElements = clonedDoc.querySelectorAll("*");
+        clonedElements.forEach(el => {
+          if (!el.style.backgroundColor || el.style.backgroundColor === "transparent") {
+            el.style.backgroundColor = "#ffffff";
+          }
+          if (!el.style.color) {
+            el.style.color = "#000000";
+          }
+        });
       }
     });
 
-    const imgData = canvas.toDataURL("image/png");
+    const imgData = canvas.toDataURL("image/png", 1.0);
 
-    // Access jsPDF correctly from the window object
+    // Create PDF
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF();
 
-    const imgWidth = 210;
-    const pageHeight = 295;
+    const imgWidth = 210; // A4 width in mm
+    const pageHeight = 295; // A4 height in mm
     const imgHeight = (canvas.height * imgWidth) / canvas.width;
     let heightLeft = imgHeight;
     let position = 0;
 
+    // Add first page
     pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
     heightLeft -= pageHeight;
 
+    // Add additional pages if needed
     while (heightLeft >= 0) {
       position = heightLeft - imgHeight;
       pdf.addPage();
@@ -1236,25 +1411,30 @@ const exportScheduleToPDF = async () => {
       heightLeft -= pageHeight;
     }
 
-    pdf.save(`schedule-${TOM_DATE}.pdf`);
+    // Save the PDF
+    const fileName = `schedule-${TOM_DATE}-${formatDate(new Date(TOM_DATE)).replace(/\s+/g, '-')}.pdf`;
+    pdf.save(fileName);
 
     Swal.fire({
       title: "PDF נוצר בהצלחה!",
-      text: "הקובץ נשמר בהצלחה",
+      text: `הקובץ נשמר בשם: ${fileName}`,
       icon: "success",
       confirmButtonText: "אישור",
     });
+
   } catch (error) {
     console.error("Error generating PDF:", error);
     Swal.fire({
       title: "שגיאה ביצירת PDF",
-      text: "אירעה שגיאה בעת יצירת קובץ ה-PDF",
+      text: "אירעה שגיאה בעת יצירת קובץ ה-PDF. נסה שוב.",
       icon: "error",
       confirmButtonText: "אישור",
     });
   } finally {
-    // Clean up
-    document.body.removeChild(scheduleContent);
+    // Clean up - remove the temporary element
+    if (document.body.contains(scheduleContent)) {
+      document.body.removeChild(scheduleContent);
+    }
   }
 };
 
