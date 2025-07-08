@@ -645,12 +645,12 @@ const RenderTaskList2 = () => {
       // Update date span and input
       const $blockDateSpan = $(`#block-date-${blockID}`);
       if ($blockDateSpan.length) {
-        $blockDateSpan.text(formatDate(new Date(block.blockDate)));
+        $blockDateSpan.text(formatDate(new Date(block.blockEndDate)));
         const dateInput = document.querySelector(
           `#${CSS.escape(blockID)} input[type="date"]`
         );
         if (dateInput) {
-          dateInput.value = block.blockDate;
+          dateInput.value = block.blockEndDate;
         }
       }
       // Add this new code to update the task name input
@@ -683,6 +683,7 @@ const RenderTaskList2 = () => {
     </div>`
   );
   initPickList();
+  renderShifts();
 };
 // Helper function to format time as HH:mm
 function formatTime(date) {
@@ -809,8 +810,8 @@ const handleMouseOverPickList = (e) => {
       `${calculateDuration(
         last_shift.endTime,
         currentBlock.startTime,
-        last_shift.block.blockDate,
-        currentBlock.blockDate
+        last_shift.block.blockEndDate,
+        currentBlock.blockStartDate
       )} שעות`
     );
     $("#last-task-rest-time").css({
@@ -820,7 +821,7 @@ const handleMouseOverPickList = (e) => {
           last_shift.endTime,
           currentBlock.startTime,
           last_shift.block.blockEndDate,
-          currentBlock.blockEndDate
+          currentBlock.blockStartDate
         )
       ),
     });
@@ -1490,11 +1491,6 @@ const moveto = (locationName) => {
   window.location.href = `${locationName}.html`;
 };
 
-
-
-
-
-
 const saveToserver = () => {
   TASK_GLOBAL2 = JSON.parse(localStorage.getItem("tasks2")) || [];
   SHIFTS_GLOBAL = JSON.parse(localStorage.getItem("shifts")) || [];
@@ -1505,7 +1501,7 @@ const saveToserver = () => {
     soldiersHere: SOLIDIER_HERE_GLOBAL,
   };
   $(".loader").show();
-  Save('Data', dataToSave);
+  Save("Data", dataToSave);
 
   // fetch(`${API_PREFIX}/api/data`, {
   //   method: "POST",
@@ -1544,15 +1540,19 @@ const saveToserver = () => {
 
 const getFromServer = () => {
   $(".loader").show();
-  ReadFrom('Data', (data) => {
+  ReadFrom("Data", (data) => {
     $(".loader").hide();
     if (data) {
+      console.log("Data loaded from server:", data);
       TASK_GLOBAL2 = data.tasks || [];
       SHIFTS_GLOBAL = data.shifts || [];
       SOLIDIER_HERE_GLOBAL = data.soldiersHere || [];
       localStorage.setItem("tasks2", JSON.stringify(TASK_GLOBAL2));
       localStorage.setItem("shifts", JSON.stringify(SHIFTS_GLOBAL));
-      localStorage.setItem("solidierHere", JSON.stringify(SOLIDIER_HERE_GLOBAL));
+      localStorage.setItem(
+        "solidierHere",
+        JSON.stringify(SOLIDIER_HERE_GLOBAL)
+      );
       RenderTaskList2();
       renderShifts();
       Swal.fire({
