@@ -890,7 +890,9 @@ const removeTask = (taskID) => {
     if (result.isConfirmed) {
       // Remove the task from TASK_GLOBAL2
       TASK_GLOBAL2 = TASK_GLOBAL2.filter((task) => task.id !== taskID);
+      SHIFTS_GLOBAL = SHIFTS_GLOBAL.filter((shift)=> shift.block.taskId !== taskID);
       localStorage.setItem("tasks2", JSON.stringify(TASK_GLOBAL2));
+      localStorage.setItem("shifts", JSON.stringify(SHIFTS_GLOBAL));
       RenderTaskList2();
       Swal.fire({
         title: "המשימה נמחקה בהצלחה!",

@@ -28,7 +28,7 @@
 .btn {
   padding: 12px 28px;
   background: linear-gradient(90deg, #2ac769 0%, #6de498 100%);
-  color: #fff;
+  color: #000000;
   border: none;
   border-radius: 8px;
   font-size: 16px;
@@ -60,11 +60,11 @@
 }
 
 #edit-task {
-  background: linear-gradient(90deg, #4e54c8 0%, #8f94fb 100%);
+  background: linear-gradient(90deg, #989ceb 0%, #8d93e6 100%);
 }
 
 #edit-task:hover {
-  background: linear-gradient(90deg, #8f94fb 0%, #4e54c8 100%);
+  background: linear-gradient(90deg, #ececf0 0%, #454eec 100%);
 }
 td {
   border: 1px solid #ddd;
