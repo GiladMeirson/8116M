@@ -34,6 +34,7 @@ $(document).ready(() => {
   $("#ishereINDATE").val(tommorowDate);
   $("#ishereINDATEtommorrow").val(day2after);
   $("#header-date").change(handleMainDateChange);
+  $("#ishereINDATE").change(handleIsHereInDateChange);
   //$(document).on("mouseover", "pick-list *", handleMouseOverPickList);
   //renderShifts();
 });
@@ -94,10 +95,25 @@ const createNewSchedule = () => {
     const newTaskId = generateUniqID();
     const newBlocks = task.blocks.map((block) => {
       const newBlockId = generateUniqID();
+
       return {
         ...block,
         blockID: newBlockId,
         blockDate: TOM_DATE, // Update to the current TOM_DATE
+        blockStartDate: new Date(
+          new Date(block.blockStartDate).setDate(
+            new Date(block.blockStartDate).getDate() + 1
+          )
+        )
+          .toISOString()
+          .split("T")[0], // Update start date to tomorrow
+        blockEndDate: new Date(
+          new Date(block.blockEndDate).setDate(
+            new Date(block.blockEndDate).getDate() + 1
+          )
+        )
+          .toISOString()
+          .split("T")[0], // Update end date to tomorrow
       };
     });
 
@@ -212,6 +228,25 @@ const saveTask = () => {
     RenderTasksList(TASK_GLOBAL);
     $(".modal-ph").fadeOut();
   });
+};
+
+const handleIsHereInDateChange = (e) => {
+  $("#ishereIN").val("");
+  $("#ishereINtommorrow").val("");
+  todayDate = $("#ishereINDATE").val();
+  tommorowDate = $("#ishereINDATEtommorrow").val();
+  for (let i = 0; i < SOLIDIER_HERE_GLOBAL.length; i++) {
+    if (SOLIDIER_HERE_GLOBAL[i].date === todayDate) {
+      $("#ishereIN").val(
+        SOLIDIER_HERE_GLOBAL[i].name + "\n" + $("#ishereIN").val()
+      );
+    }
+    if (SOLIDIER_HERE_GLOBAL[i].date === tommorowDate) {
+      $("#ishereINtommorrow").val(
+        SOLIDIER_HERE_GLOBAL[i].name + "\n" + $("#ishereINtommorrow").val()
+      );
+    }
+  }
 };
 
 const handleNameChange = (input, taskID) => {
@@ -783,15 +818,6 @@ const handleMouseOverPickList = (e) => {
       blockID.replace("pick-list-", "").split("-")[0]
     );
     const soldierObj = getFullSoldiersByNames([soldierName])[0];
-    console.log(
-      "Current Block:",
-      currentBlock,
-      "Shifts:",
-      shifts,
-      "Soldier Object:",
-      soldierObj,
-      last_shift
-    );
     let lastTaskDate = `התחיל ב${last_shift.startTime} עד ${last_shift.endTime} <br> בתאריך ${last_shift.date}`;
     $("#soldier-detail-modal").css({
       display: "block",
@@ -806,6 +832,8 @@ const handleMouseOverPickList = (e) => {
     $("#last-task-name").html(last_shift.taskName);
     $("#last-task-date").html(lastTaskDate);
     $("#last-task-duration").text(`משך המשימה : ${last_shift.duration} שעות`);
+    console.table(last_shift.block);
+    console.table(currentBlock);
     $("#last-task-rest-time").text(
       `${calculateDuration(
         last_shift.endTime,
@@ -983,11 +1011,19 @@ function calculateDuration(
   startDate = null,
   endDate = null
 ) {
+  console.table({
+    startTime,
+    endTime,
+    startDate,
+    endDate,
+  });
+  startTime = formatTimeString(startTime);
+  endTime = formatTimeString(endTime);
   // If dates are provided, use them; otherwise assume same day
   if (startDate && endDate) {
     const startDateTime = new Date(startDate + "T" + startTime);
     const endDateTime = new Date(endDate + "T" + endTime);
-
+    console.log("in calc duration", "start", startDateTime, "end", endDateTime);
     // Calculate difference in milliseconds and convert to hours
     const durationMilliseconds =
       endDateTime.getTime() - startDateTime.getTime();
@@ -1113,10 +1149,12 @@ const getColorForDurationSpan = (
   last_mission_duration,
   current_rest_duration
 ) => {
+  console.log("last_mission_duration", last_mission_duration);
+  console.log("current_rest_duration", current_rest_duration);
   if (last_mission_duration >= current_rest_duration) {
     return "#fba5a5";
   }
-  if (last_mission_duration * 2 == current_rest_duration) {
+  if (last_mission_duration * 2 >= current_rest_duration) {
     return "#f8d986";
   }
   if (last_mission_duration * 2 < current_rest_duration) {
@@ -1489,6 +1527,12 @@ const moveto = (locationName) => {
   });
   return;
   window.location.href = `${locationName}.html`;
+};
+
+const formatTimeString = (timeStr) => {
+  const [hours, minutes] = timeStr.split(":");
+  const paddedHours = hours.padStart(2, "0");
+  return `${paddedHours}:${minutes}`;
 };
 
 const saveToserver = () => {
