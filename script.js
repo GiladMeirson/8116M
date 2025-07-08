@@ -279,6 +279,21 @@ const handleTimeChange = (input, isStart, taskID, blockID) => {
       } else {
         block.endTime = timeValue;
         block.duration = calculateDuration(block.startTime, timeValue);
+        let startDate = new Date().setHours(
+          parseInt(block.startTime.split(":")[0])
+        );
+        let endDate = new Date().setHours(
+          parseInt(block.endTime.split(":")[0])
+        );
+        if (startDate > endDate) {
+          block.blockEndDate = new Date(block.blockDate);
+          block.blockEndDate.setDate(block.blockEndDate.getDate() + 1);
+          block.blockEndDate = block.blockEndDate.toISOString().split("T")[0]; // Format to YYYY-MM-DD
+        } else {
+          // Keep the same date if end time is not after start time
+          block.blockStartDate = block.blockEndDate;
+          block.blockDate = block.blockEndDate;
+        }
       }
 
       // Update shifts that have blockIDs starting with this blockID
@@ -309,6 +324,8 @@ const handleDateChange = (input, blockID) => {
     const block = task.blocks.find((block) => block.blockID === blockID);
     if (block) {
       block.blockDate = dateValue;
+      block.blockStartDate = dateValue;
+      block.blockEndDate = dateValue;
       localStorage.setItem("tasks2", JSON.stringify(TASK_GLOBAL2));
       break;
     }
@@ -319,6 +336,8 @@ const handleDateChange = (input, blockID) => {
     if (shift.blockID.startsWith(blockID)) {
       shift.date = dateValue;
       shift.block.blockDate = dateValue;
+      shift.block.blockStartDate = dateValue;
+      shift.block.blockEndDate = dateValue;
     }
   });
   localStorage.setItem("shifts", JSON.stringify(SHIFTS_GLOBAL));
@@ -668,7 +687,7 @@ const RenderTaskList2 = () => {
 
   // Filter tasks that have at least one block with date matching TOM_DATE
   const filteredTasks = TASK_GLOBAL2.filter((task) => {
-    return task.blocks.some((block) => block.blockDate === TOM_DATE);
+    return task.blocks.some((block) => block.blockStartDate === TOM_DATE);
   });
 
   filteredTasks.forEach((task) => {
@@ -776,7 +795,7 @@ const handleChangePickList = (e) => {
     block: block,
   };
   let shiftColids = checkShiftColids(getAllShiftsByName(selectedItem), shift);
-  console.log(shiftColids);
+  //console.log(shiftColids);
   if (shiftColids) {
     Swal.fire({
       title: "המשמרת מתנגשת עם משמרות אחרות",
@@ -821,8 +840,10 @@ const handleMouseOverPickList = (e) => {
     let lastTaskDate = `התחיל ב${last_shift.startTime} עד ${last_shift.endTime} <br> בתאריך ${last_shift.date}`;
     $("#soldier-detail-modal").css({
       display: "block",
-      top: e.clientY - 50 + "px",
-      left: e.clientX - 450 + "px",
+      position: "fixed",
+      top: "10px",
+      left: "50%",
+      transform: "translateX(-50%)",
       zIndex: 1000,
     });
     $("#soldier-detail-modal #soldier-name").text(soldierName);
@@ -831,16 +852,28 @@ const handleMouseOverPickList = (e) => {
     );
     $("#last-task-name").html(last_shift.taskName);
     $("#last-task-date").html(lastTaskDate);
-    $("#last-task-duration").text(`משך המשימה : ${last_shift.duration} שעות`);
+    $("#last-task-duration").text(`משך המשימה : ${last_shift.duration.toFixed(2)} שעות`);
     console.table(last_shift.block);
     console.table(currentBlock);
+
+    const restTime = calculateDuration(
+      last_shift.endTime,
+      currentBlock.startTime,
+      last_shift.block.blockEndDate,
+      currentBlock.blockStartDate
+    );
+
+    // $.notify(
+    //   `חייל: ${soldierName}\nמשימה אחרונה: ${last_shift.taskName}\nמ-${last_shift.startTime} עד ${last_shift.endTime}\nתאריך: ${last_shift.date}\nמשך משימה: ${last_shift.duration} שעות\nזמן מנוחה: ${restTime} שעות`,
+    //   "info"
+    // );
     $("#last-task-rest-time").text(
       `${calculateDuration(
         last_shift.endTime,
         currentBlock.startTime,
         last_shift.block.blockEndDate,
         currentBlock.blockStartDate
-      )} שעות`
+      ).toFixed(2)} שעות`
     );
     $("#last-task-rest-time").css({
       backgroundColor: getColorForDurationSpan(
@@ -890,7 +923,9 @@ const removeTask = (taskID) => {
     if (result.isConfirmed) {
       // Remove the task from TASK_GLOBAL2
       TASK_GLOBAL2 = TASK_GLOBAL2.filter((task) => task.id !== taskID);
-      SHIFTS_GLOBAL = SHIFTS_GLOBAL.filter((shift)=> shift.block.taskId !== taskID);
+      SHIFTS_GLOBAL = SHIFTS_GLOBAL.filter(
+        (shift) => shift.block.taskId !== taskID
+      );
       localStorage.setItem("tasks2", JSON.stringify(TASK_GLOBAL2));
       localStorage.setItem("shifts", JSON.stringify(SHIFTS_GLOBAL));
       RenderTaskList2();
