@@ -8,6 +8,8 @@
     <link rel="stylesheet" href="./style.css" />
     <script src="./solidjer.js"></script>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.14.1/jquery-ui.js"></script>
+
     <script src="./notify.js"></script>
     <!-- The core Firebase JS SDK is always required and must be listed first -->
     <script src="https://www.gstatic.com/firebasejs/7.14.6/firebase-app.js"></script>
@@ -167,6 +169,77 @@
             </button>
           </div>
         </div> -->
+      </div>
+    </div>
+
+    <div class="modal-ishere">
+      <span class="task-close" onclick="closeishereModal()">X</span>
+      <div class="mega-wraper-ishere">
+        <div class="modal-ishere-wraper">
+          <div class="header-ishere">
+            <input type="date" name="" id="ishereINDATE" class="ishereINDATE" />
+          </div>
+          <div class="ishere-content">
+            <textarea
+              rows="10"
+              name=""
+              id="ishereIN"
+              class="ishereIN"
+            ></textarea>
+          </div>
+        </div>
+
+        <div class="modal-ishere-wraper">
+          <div class="header-ishere">
+            <input
+              type="date"
+              name=""
+              id="ishereINDATEtommorrow"
+              class="ishereINDATE"
+            />
+          </div>
+          <div class="ishere-content">
+            <textarea
+              rows="10"
+              name=""
+              id="ishereINtommorrow"
+              class="ishereIN"
+            ></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="wraper-btn">
+        <button class="btn" onclick="saveHeres()" id="save-ishere">
+          שמירת נוכחות
+        </button>
+      </div>
+    </div>
+
+    <div class="loader"></div>
+
+    <div id="soldier-detail-modal" class="soldier-detail-container">
+        <span style="cursor: pointer;" class="task-close" onclick="closeModalByID('soldier-detail-modal')">X</span>
+      <div class="soldier-detail-wraper">
+        <div class="soldier-detail-header">
+          <h2 id="soldier-name">שם החייל</h2>
+          <h3 id="soldier-unit">מחלקה 3</h3>
+        </div>
+        <div class="detail-content">
+          <h3>משימה אחרונה</h3>
+          <div class="last-task">
+            <p id="last-task-name">סיור</p>
+            <p id="last-task-date">
+              התחיל ב05:00 עד 13:00 <br />
+              בתאריך 2023-10-01
+            </p>
+
+            <p id="last-task-duration">משך המשימה : 8 שעות</p>
+            <p id="last-task-rest">
+              מנוחה עד למשימה הבאה לשיבוץ :
+              <span id="last-task-rest-time">6 שעות</span>
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   </body>

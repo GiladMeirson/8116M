@@ -1534,40 +1534,6 @@ const saveToserver = () => {
   };
   $(".loader").show();
   Save("Data", dataToSave);
-
-  // fetch(`${API_PREFIX}/api/data`, {
-  //   method: "POST",
-  //   headers: {
-  //     "Content-Type": "application/json",
-  //   },
-  //   body: JSON.stringify(dataToSave),
-  // })
-  //   .then((response) => {
-  //     $(".loader").hide();
-
-  //     if (!response.ok) {
-  //       throw new Error("Network response was not ok");
-  //     }
-  //     return response.json();
-  //   })
-  //   .then((data) => {
-  //     console.log("Data saved successfully:", data);
-  //     Swal.fire({
-  //       title: "הנתונים נשמרו בהצלחה!",
-  //       icon: "success",
-  //       confirmButtonText: "אישור",
-  //     });
-  //   })
-  //   .catch((error) => {
-  //     $(".loader").hide();
-  //     console.error("Error saving data:", error);
-  //     Swal.fire({
-  //       title: "שגיאה בשמירת הנתונים",
-  //       text: "אירעה שגיאה בעת שמירת הנתונים לשרת\nתפנה לסיני 051-2122453",
-  //       icon: "error",
-  //       confirmButtonText: "אישור",
-  //     });
-  //   });
 };
 
 const getFromServer = () => {

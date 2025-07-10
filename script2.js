@@ -1,5 +1,6 @@
 GLOBAL = {
   TASKS: [],
+  PRECENCE: [],
 };
 
 $(document).ready(() => {
@@ -8,23 +9,10 @@ $(document).ready(() => {
     `שבצק ל${formatDayInWeekDate(new Date(getTommorowDateString()))}`
   );
   $("#header-date").change(handleMainDateChange);
-
-  //   flatpickr("#start-time-block-456", {
-  //     enableTime: true,
-  //     dateFormat: "Y-m-d H:i",
-  //     time_24hr: true,
-  //     minuteIncrement: 15,
-  //     defaultDate: new Date(getTommorowDateString()).setHours(9, 0, 0, 0), // Set to 9:00 AM
-  //     locale: "he",
-  //   });
-  //   flatpickr("#end-time-block-456", {
-  //     enableTime: true,
-  //     dateFormat: "Y-m-d H:i",
-  //     time_24hr: true,
-  //     minuteIncrement: 15,
-  //     defaultDate: new Date(getTommorowDateString()).setHours(13, 0, 0, 0), // Set to 9:00 AM
-  //     locale: "he",
-  //   });
+  $("#ishereINDATE").change(handleIsHereInDateChange);
+  $("#ishereINDATEtommorrow").change(handleIsHereInDateChange);
+  $("#soldier-detail-modal").draggable();
+  getFromServer();
 });
 
 // ------------------------------ HANDLERS ------------------------------
@@ -33,15 +21,41 @@ const handleMainDateChange = (e) => {
   $("#header-title").html(
     `שבצק ל${formatDayInWeekDate(new Date(e.target.value))}`
   ); // Set the header title
+  renderTasksList(); // Re-render the tasks list based on the new date
 };
+
+const handleIsHereInDateChange = (e) => {
+  $("#ishereIN").val("");
+  $("#ishereINtommorrow").val("");
+  todayDate = $("#ishereINDATE").val();
+  tommorowDate = $("#ishereINDATEtommorrow").val();
+  for (let i = 0; i < GLOBAL.PRECENCE.length; i++) {
+    if (GLOBAL.PRECENCE[i].date === todayDate) {
+      $("#ishereIN").val(GLOBAL.PRECENCE[i].name + "\n" + $("#ishereIN").val());
+    }
+    if (GLOBAL.PRECENCE[i].date === tommorowDate) {
+      $("#ishereINtommorrow").val(
+        GLOBAL.PRECENCE[i].name + "\n" + $("#ishereINtommorrow").val()
+      );
+    }
+  }
+};
+
+const handleNameChange = (input, taskId) => {
+  const task = getTaskById(taskId);
+  if (task) {
+    task.taskName = input.value.trim();
+  }
+};
+
 // ------------------------------ EVENTS ------------------------------
 const addNewTask = () => {
   let colornumber = GLOBAL.TASKS.length + 1;
   let color = getBrightColor(colornumber);
   const blockId = generateUniqID();
   const TaskId = generateUniqID();
-  const startTimeStamp = new Date(getTommorowDateString()).setHours(9, 0, 0, 0); // Set to 9:00 AM
-  const endTimeStamp = new Date(getTommorowDateString()).setHours(13, 0, 0, 0); // Set to 1:00 PM
+  const startTimeStamp = new Date($("#header-date").val()).setHours(9, 0, 0, 0); // Set to 9:00 AM
+  const endTimeStamp = new Date($("#header-date").val()).setHours(13, 0, 0, 0); // Set to 1:00 PM
   let newTask = {
     color: color,
     taskId: TaskId,
@@ -78,6 +92,7 @@ const initTimePickers = () => {
             block.startTimeStamp,
             block.endTimeStamp
           );
+          $(`#block-duration-${block.blockId}`).text(`${block.duration} שעות`); // Update the duration span
           $(`#end-span-${block.blockId}`).text(
             formatDayInWeekDate(new Date(block.endTimeStamp))
           ); // Update the end date span
@@ -101,6 +116,7 @@ const initTimePickers = () => {
             block.startTimeStamp,
             block.endTimeStamp
           );
+          $(`#block-duration-${block.blockId}`).text(`${block.duration}  שעות`); // Update the duration span
           $(`#end-span-${block.blockId}`).text(
             formatDayInWeekDate(new Date(block.endTimeStamp))
           ); // Update the end date span
@@ -191,23 +207,76 @@ const removeTask = (taskId) => {
   });
 };
 
-const updateSoldierSelection = (blockId, soldierId) => {
+const updateSoldierSelection = (blockId, soldierId, selectId) => {
   const block = getBlockById(blockId);
   if (block) {
-    // Check if the soldierId is already in the block's soldiersNames array
-    if (!block.soldiersNames.includes(soldierId)) {
-      let soldierObj = SOLIDJER.find(
-        (soldier) => soldier.keywords[1] === soldierId
+    // Find the soldier object from SOLIDJER array
+    let soldierObj = SOLIDJER.find(
+      (soldier) => soldier.keywords[1] === soldierId
+    );
+
+    if (soldierObj) {
+      // Check if any soldier with the same name already exists in the block
+      const isDuplicate = block.soldiersNames.some(
+        (existingSoldier) => existingSoldier.value === soldierObj.value
       );
-      if (soldierObj) {
-        block.soldiersNames.push(soldierObj); // Add the soldierId to the array
+      soldierObj.selectId = selectId; // Add selectId to the soldier object
+
+      if (!isDuplicate) {
+        const existingSoldierIndex = block.soldiersNames.findIndex(
+          (existingSoldier) => existingSoldier.selectId === selectId
+        );
+
+        if (existingSoldierIndex !== -1) {
+          // Replace the existing soldier with the new one
+          block.soldiersNames[existingSoldierIndex] = soldierObj;
+        } else {
+          // Add new soldier if no existing soldier found with this selectId
+          block.soldiersNames.push(soldierObj);
+        }
+        renderDeatilSoldierModal(block, soldierObj);
+      } else {
+        Swal.fire({
+          icon: "warning",
+          title: "חייל כבר משובץ",
+          text: "החייל הזה כבר משובץ בבלוק הזה.",
+        });
+        // Reset the select element to default value
+        const selects = document.querySelectorAll(`#${selectId}`);
+        selects[selects.length - 1].value = "-1";
       }
-    } else {
-      Swal.fire({
-        icon: "warning",
-        title: "חייל כבר נבחר",
-        text: "החייל הזה כבר נבחר בבלוק הזה.",
-      });
+      const shiftColid = checkShiftsColids(block, soldierObj);
+      if (shiftColid != null) {
+        let textToWarn = `החייל ${
+          soldierObj.value
+        } כבר משובץ במשמרת אחרת באותו זמן.\n ${
+          shiftColid.taskName
+        } \n למשמרת ${formatDayAndTime(
+          shiftColid.block.startTimeStamp
+        )} - ${formatDayAndTime(shiftColid.block.endTimeStamp)}`;
+        Swal.fire({
+          icon: "warning",
+          title: "התנגשות במשמרות",
+          text: textToWarn,
+          customClass: {
+            container: "custom-swal-container",
+            popup: "custom-swal-popup",
+            header: "custom-swal-header",
+            title: "custom-swal-title",
+            text: "custom-swal-text",
+          },
+          // Add this style object
+          showClass: {
+            popup: "animate__animated animate__fadeInDown",
+          },
+          // Add this property
+          html: textToWarn.replace(/\n/g, "<br>"),
+        });
+        // Reset the select element to default value
+        const selects = document.querySelectorAll(`#${selectId}`);
+        selects[selects.length - 1].value = "-1";
+        block.soldiersNames.pop();
+      }
     }
   } else {
     console.error("Block not found with ID:", blockId);
@@ -235,6 +304,51 @@ const moveto = (locationName) => {
   return;
 };
 
+const saveHeres = () => {
+  todayDate = $("#ishereINDATE").val();
+  tommorowDate = $("#ishereINDATEtommorrow").val();
+  const soldiersToday = $("#ishereIN").val().split("\n");
+  const soldiersTommorrow = $("#ishereINtommorrow").val().split("\n");
+
+  // Helper function to check if soldier already exists for a specific date
+  const soldierExistsForDate = (soldierName, date) => {
+    return GLOBAL.PRECENCE.some(
+      (soldier) =>
+        soldier.name.trim() === soldierName.trim() && soldier.date === date
+    );
+  };
+
+  // Add today's soldiers
+  soldiersToday.forEach((soldier) => {
+    if (soldier.trim() && !soldierExistsForDate(soldier, todayDate)) {
+      GLOBAL.PRECENCE.push({
+        name: soldier.trim(),
+        date: todayDate,
+        isHere: true,
+      });
+    }
+  });
+
+  // Add tomorrow's soldiers
+  soldiersTommorrow.forEach((soldier) => {
+    if (soldier.trim() && !soldierExistsForDate(soldier, tommorowDate)) {
+      GLOBAL.PRECENCE.push({
+        name: soldier.trim(),
+        date: tommorowDate,
+        isHere: true,
+      });
+    }
+  });
+
+  Swal.fire({
+    title: "החיילים נשמרו בהצלחה!",
+    icon: "success",
+    confirmButtonText: "אישור",
+  }).then(() => {
+    closeishereModal();
+  });
+};
+
 // ------------------------------ RENDERS ------------------------------
 const renderTasksList = () => {
   const $taskContainer = $("#tasks-container");
@@ -245,8 +359,12 @@ const renderTasksList = () => {
   selectedDateObj.setHours(0, 0, 0, 0); // Reset time to start of day
 
   // Filter tasks that have blocks on the selected date
-  const filteredTasks = GLOBAL.TASKS.filter((task) => {
-    return task.blocks.some((block) => {
+  const filteredTasks = GLOBAL.TASKS.map((task) => {
+    // Create a copy of the task
+    const filteredTask = { ...task };
+
+    // Filter blocks that start or end on selected date
+    filteredTask.blocks = task.blocks.filter((block) => {
       const blockStartDate = new Date(block.startTimeStamp);
       const blockEndDate = new Date(block.endTimeStamp);
       blockStartDate.setHours(0, 0, 0, 0);
@@ -257,7 +375,9 @@ const renderTasksList = () => {
         blockEndDate.getTime() === selectedDateObj.getTime()
       );
     });
-  });
+
+    return filteredTask;
+  }).filter((task) => task.blocks.length > 0); // Only keep tasks that have matching blocks
 
   let taskHTML = "";
   console.log("Filtered Tasks:", filteredTasks);
@@ -276,6 +396,9 @@ const renderTasksList = () => {
     taskHTML += `</thead>`;
     taskHTML += `<tbody id="task-body-${task.taskId}">`;
     task.blocks.forEach((block) => {
+      if (typeof block.soldiersNames == "undefined") {
+        block.soldiersNames = [];
+      }
       taskHTML += `<tr id="tr-${block.blockId}">`;
       taskHTML += `<td class="task-time">`;
       taskHTML += `<div class="block-times">`;
@@ -298,21 +421,42 @@ const renderTasksList = () => {
       taskHTML += `<input type="text" class="flat-picker flat-end" id="end-time-block-${block.blockId}"/>`;
       taskHTML += `</div>`;
       taskHTML += `</div>`;
+      taskHTML += `<h2 id="block-duration-${block.blockId}">משך: ${block.duration} שעות</h2>`;
       taskHTML += `</td>`;
       taskHTML += `<td class="solijer-name">`;
       taskHTML += `<div id="soldier-amounts-block${block.blockId}" class="block-amounts">`;
       for (let i = 0; i < block.soldierAmount; i++) {
         const selectedSoldier = block.soldiersNames[i] || null;
-        taskHTML += `<select onchange="updateSoldierSelection('${block.blockId}',this.value)" name="" class="soldier-select" id="soldier-select-block${block.blockId}">`;
+        taskHTML += `<select onchange="updateSoldierSelection('${block.blockId}',this.value,this.id)" name="" class="soldier-select" id="soldier-select-block${block.blockId}-${i}">`;
         taskHTML += `<option value="-1">בחר חייל..</option>`;
         // Assuming you have a function to get soldiers, you can loop through them here
         SOLIDJER.forEach((soldier) => {
           const isSelected =
             selectedSoldier &&
             selectedSoldier.keywords[1] === soldier.keywords[1];
-          taskHTML += `<option value="${soldier.keywords[1]}" ${
-            isSelected ? "selected" : ""
-          }>${soldier.value}</option>`;
+          let backgroundColor = "";
+          switch (soldier.keywords[0]) {
+            case "7":
+              backgroundColor = "#ffcdd2"; // light red
+              break;
+            case "אוהד":
+              backgroundColor = "#bbdefb"; // light blue
+              break;
+            case "בייניש":
+              backgroundColor = "#c8e6c9"; // light green
+              break;
+            case "מסופח":
+              backgroundColor = "#fff9c4"; // light yellow
+              break;
+            case 'מפל"ג':
+              backgroundColor = "#e1bee7"; // light purple
+              break;
+          }
+          taskHTML += `<option onmouseover="handleMouseOverSelection(this, '${
+            block.blockId
+          }')"  style="background-color: ${backgroundColor}" value="${
+            soldier.keywords[1]
+          }" ${isSelected ? "selected" : ""}>${soldier.value}</option>`;
         });
         taskHTML += `</select>`;
       }
@@ -332,6 +476,40 @@ const renderTasksList = () => {
   });
   $taskContainer.html(taskHTML); // Render the tasks in the container
   initTimePickers(); // Initialize time pickers for the newly rendered tasks
+};
+const renderDeatilSoldierModal = (block, soldierObj) => {
+  const lastShift = getLatestShiftBefore(
+    soldierObj.keywords[1],
+    block.startTimeStamp
+  );
+
+  if (lastShift) {
+    const restTimeHours = calculateDurationInHours(
+      lastShift.block.endTimeStamp,
+      block.startTimeStamp
+    );
+    const spanColor = getColorForDurationSpan(
+      lastShift.block.duration,
+      restTimeHours
+    );
+    $("#soldier-name").text(soldierObj.value);
+    $("#soldier-unit").text("מחלקת " + soldierObj.keywords[0]); // Assuming keywords[0] is the unit
+    $("#last-task-name").text(lastShift.taskName);
+    $("#last-task-date").html(
+      `התחיל ב${formatDayAndTime(
+        lastShift.block.startTimeStamp
+      )} עד ${formatDayAndTime(lastShift.block.endTimeStamp)} <br />`
+    );
+    $("#last-task-duration").text(
+      `משך המשימה : ${lastShift.block.duration} שעות`
+    );
+    $("#last-task-rest").html(
+      `מנוחה עד למשימה הבאה לשיבוץ :
+       <span id="last-task-rest-time">${restTimeHours} שעות</span>`
+    );
+    $("#last-task-rest-time").css("background-color", spanColor);
+    $("#soldier-detail-modal").fadeIn();
+  }
 };
 // ------------------------------ HELPERS ------------------------------
 const getTommorowDateString = () => {
@@ -389,4 +567,194 @@ const calculateDurationInHours = (startTimestamp, endTimestamp) => {
   const diffInMilliseconds = endTimestamp - startTimestamp;
   const diffInHours = diffInMilliseconds / (1000 * 60 * 60); // Convert from milliseconds to hours
   return Math.round(diffInHours * 100) / 100; // Round to 2 decimal places
+};
+const showHereModal = () => {
+  $("#ishereIN").val("");
+  $("#ishereINtommorrow").val("");
+  todayDate = $("#ishereINDATE").val(new Date().toISOString().split("T")[0]);
+  tommorowDate = $("#ishereINDATEtommorrow").val(
+    new Date(getTommorowDateString()).toISOString().split("T")[0]
+  );
+  for (let i = 0; i < GLOBAL.PRECENCE.length; i++) {
+    if (GLOBAL.PRECENCE[i].date === todayDate) {
+      $("#ishereIN").val(GLOBAL.PRECENCE[i].name + "\n" + $("#ishereIN").val());
+    }
+    if (GLOBAL.PRECENCE[i].date === tommorowDate) {
+      $("#ishereINtommorrow").val(
+        GLOBAL.PRECENCE[i].name + "\n" + $("#ishereINtommorrow").val()
+      );
+    }
+  }
+  $(".modal-ishere").fadeIn();
+};
+const closeishereModal = () => {
+  $(".modal-ishere").fadeOut();
+};
+
+const getColorForDurationSpan = (
+  last_mission_duration,
+  current_rest_duration
+) => {
+  console.log("last_mission_duration", last_mission_duration);
+  console.log("current_rest_duration", current_rest_duration);
+  if (last_mission_duration >= current_rest_duration) {
+    return "#fba5a5";
+  }
+  if (last_mission_duration * 2 >= current_rest_duration) {
+    return "#f8d986";
+  }
+  if (last_mission_duration * 2 < current_rest_duration) {
+    return "#4CAF50";
+  }
+};
+
+const closeModalByID = (id) => {
+  $(`#${id}`).fadeOut();
+};
+
+const checkShiftsColids = (wantedBlock, soldObj) => {
+  soldierShift = getBlocksBySoldierId(soldObj.keywords[1]);
+  // Return the first conflicting block, or null if no conflicts
+  for (let entry of soldierShift) {
+    // Skip if this is the same block we're checking against
+    if (entry.block.blockId === wantedBlock.blockId) continue;
+
+    // Check for overlap
+    const blockStart = entry.block.startTimeStamp;
+    const blockEnd = entry.block.endTimeStamp;
+    const wantedStart = wantedBlock.startTimeStamp;
+    const wantedEnd = wantedBlock.endTimeStamp;
+
+    if (
+      (wantedStart >= blockStart && wantedStart < blockEnd) || // Start time overlaps
+      (wantedEnd > blockStart && wantedEnd <= blockEnd) || // End time overlaps
+      (wantedStart <= blockStart && wantedEnd >= blockEnd) // Completely contains the other block
+    ) {
+      return entry;
+    }
+  }
+  return null;
+};
+
+function getBlocksBySoldierId(soldierId) {
+  // Array to store matching blocks with task context
+  let soldierBlocks = [];
+
+  // Loop through each task
+  GLOBAL.TASKS.forEach((task) => {
+    // Loop through each block in the task
+    task.blocks.forEach((block) => {
+      // Check if soldiersNames exists and has entries
+      if (block.soldiersNames && block.soldiersNames.length > 0) {
+        // Check if any soldier in the block matches the ID
+        const hasSoldier = block.soldiersNames.some(
+          (soldier) => soldier.keywords && soldier.keywords[1] === soldierId
+        );
+
+        if (hasSoldier) {
+          // Add block with task context
+          soldierBlocks.push({
+            taskId: task.taskId,
+            taskName: task.taskName,
+            taskColor: task.color,
+            block: {
+              ...block,
+              // Include only the matching soldier
+              soldiersNames: block.soldiersNames.filter(
+                (soldier) => soldier.keywords[1] === soldierId
+              ),
+            },
+          });
+        }
+      }
+    });
+  });
+
+  return soldierBlocks;
+}
+
+function formatDayAndTime(timestamp) {
+  const days = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"];
+  const date = new Date(timestamp);
+  const dayName = days[date.getDay()];
+
+  // Format hours and minutes with leading zeros
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+
+  return `יום ${dayName} בשעה ${hours}:${minutes}`;
+}
+
+function getLatestShiftBefore(soldierId, timestamp) {
+  // Array to store all matching blocks with task context
+  let soldierBlocks = [];
+
+  // Loop through each task in GLOBAL.TASKS
+  GLOBAL.TASKS.forEach((task) => {
+    // Loop through each block in the task
+    task.blocks.forEach((block) => {
+      // Check if block ends before the given timestamp and has soldiers
+      if (
+        block.endTimeStamp < timestamp &&
+        block.soldiersNames &&
+        block.soldiersNames.length > 0
+      ) {
+        // Check if the soldier is assigned to this block
+        const hasSoldier = block.soldiersNames.some(
+          (soldier) => soldier.keywords && soldier.keywords[1] === soldierId
+        );
+
+        if (hasSoldier) {
+          // Add block with task context
+          soldierBlocks.push({
+            taskId: task.taskId,
+            taskName: task.taskName,
+            taskColor: task.color,
+            block: {
+              ...block,
+              // Include only the matching soldier
+              soldiersNames: block.soldiersNames.filter(
+                (soldier) => soldier.keywords[1] === soldierId
+              ),
+            },
+          });
+        }
+      }
+    });
+  });
+
+  // Sort blocks by endTimeStamp in descending order (latest first)
+  soldierBlocks.sort((a, b) => b.block.endTimeStamp - a.block.endTimeStamp);
+
+  // Return the latest block (first after sorting) or null if no blocks found
+  return soldierBlocks.length > 0 ? soldierBlocks[0] : null;
+}
+// ------------------------------ SERVER ------------------------------
+const saveToserver = () => {
+  $(".loader").show();
+  Save("Data2", GLOBAL);
+};
+
+const getFromServer = () => {
+  $(".loader").show();
+  ReadFrom("Data2", (data) => {
+    $(".loader").hide();
+    if (data) {
+      GLOBAL = data;
+      console.log("Data loaded from server:", GLOBAL);
+      renderTasksList();
+      Swal.fire({
+        title: "הנתונים נטענו בהצלחה!",
+        icon: "success",
+        confirmButtonText: "אישור",
+      });
+    } else {
+      Swal.fire({
+        title: "שגיאה בטעינת הנתונים או שמאגר הנתונים ריק",
+        text: "מאגר הנתונים ריק,לא נמצאו נתונים בשרת לכל בעיה ניתן לדבר עם סיני 051-2122453",
+        icon: "info",
+        confirmButtonText: "אישור",
+      });
+    }
+  });
 };

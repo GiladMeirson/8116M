@@ -444,6 +444,8 @@ pick-list {
 .soldier-detail-container {
   display: none;
   position: absolute;
+  top: 50%;
+  left: 50%;
   border: 1px solid #ddd;
   padding: 20px;
   background-color: #dbf0fe;
@@ -498,10 +500,11 @@ pick-list {
     transform: rotate(1turn);
   }
 }
-option,select {
+option,
+select {
   cursor: pointer;
 }
-.add-block-btn-wraper button{
+.add-block-btn-wraper button {
   margin-inline: 10px;
 }
 .example-task button {
@@ -550,4 +553,23 @@ option,select {
 .block-amounts {
   display: flex;
   flex-direction: column;
+}
+#soldier-detail-modal {
+  cursor: grab;
+}
+
+.custom-swal-popup {
+  font-size: 1.4em !important;
+}
+
+.custom-swal-title {
+  font-size: 1.8em !important;
+  font-weight: bold !important;
+}
+
+.custom-swal-text {
+  white-space: pre-line !important;
+
+  font-size: 1.4em !important;
+  line-height: 1.3 !important;
 }
