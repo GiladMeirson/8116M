@@ -25,11 +25,9 @@ $(document).ready(() => {
   //RenderTasksList(TASK_GLOBAL); // Render existing tasks
   //RenderTaskList2(); // Render tasks from TASK_GLOBAL2
   // show and hide modal
-  $("#addTaskBtn").click(addTask);
   $("#close-modal").click(() => {
     $(".modal-ph").fadeOut();
   });
-  $("#save-task").click(saveTask);
   $("#start-time").val(tommorowDate + "T13:00");
   $("#ishereINDATE").val(tommorowDate);
   $("#ishereINDATEtommorrow").val(day2after);
@@ -181,54 +179,6 @@ const handleMainDateChange = (e) => {
   RenderTaskList2();
 };
 
-const addTask = () => {
-  $(".modal-ph").fadeIn();
-};
-
-const saveTask = () => {
-  const taskData = {
-    taskName: document.getElementById("task-name").value,
-    soldierAmount: parseInt(document.getElementById("solidjer-amount").value),
-    commanderAmount: parseInt(
-      document.getElementById("commandor-amount").value
-    ),
-
-    startTime: document.getElementById("start-time").value,
-    blockDuration: parseInt(document.getElementById("block-duration").value),
-    blockAmount: parseInt(document.getElementById("block-amount").value),
-    taskColor: $("#task-color").val(),
-    isContinueTask: $("#isContinueTask").is(":checked"),
-  };
-  taskData.blocks = [];
-  if (!taskData.isContinueTask) {
-    $(".start-time-in").each((index, element) => {
-      taskData.blocks.push({
-        startTime: element.value,
-        blockDuration: $(".block-duration")[index].value,
-        blockID: generateUniqID(),
-      });
-    });
-  } else {
-    taskData.blockIDs = [];
-    for (let i = 0; i < taskData.blockAmount; i++) {
-      taskData.blocks.push({
-        startTime: taskData.startTime,
-        blockDuration: taskData.blockDuration,
-        blockID: generateUniqID(),
-      });
-    }
-  }
-  TASK_GLOBAL.push(taskData);
-  localStorage.setItem("tasks", JSON.stringify(TASK_GLOBAL));
-  Swal.fire({
-    title: "המשימה נשמרה בהצלחה!",
-    icon: "success",
-    confirmButtonText: "אישור",
-  }).then(() => {
-    RenderTasksList(TASK_GLOBAL);
-    $(".modal-ph").fadeOut();
-  });
-};
 
 const handleIsHereInDateChange = (e) => {
   $("#ishereIN").val("");
@@ -251,7 +201,6 @@ const handleIsHereInDateChange = (e) => {
 
 const handleNameChange = (input, taskID) => {
   const taskName = input.value.trim();
-  input.value = taskName; // Update the input value to remove leading/trailing spaces
   //console.log("Task name changed to:", taskName, taskID);
   // Update the task's name in TASK_GLOBAL2
   const taskIndex = TASK_GLOBAL2.findIndex((task) => task.id === taskID);
@@ -852,7 +801,9 @@ const handleMouseOverPickList = (e) => {
     );
     $("#last-task-name").html(last_shift.taskName);
     $("#last-task-date").html(lastTaskDate);
-    $("#last-task-duration").text(`משך המשימה : ${last_shift.duration.toFixed(2)} שעות`);
+    $("#last-task-duration").text(
+      `משך המשימה : ${last_shift.duration.toFixed(2)} שעות`
+    );
     console.table(last_shift.block);
     console.table(currentBlock);
 

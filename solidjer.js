@@ -1,6 +1,6 @@
 const SOLIDJER = [
   // 7th Platoon
-  { value: "?", keywords: ["?", "0"] },
+  // { value: "?", keywords: ["?", "0"] },
   { value: "רזיאל אברהם", keywords: ["7", "8084416"] },
   { value: "יקותיאל אזרחי", keywords: ["7", "8121390"] },
   { value: "גיא איתן", keywords: ["7", "8038702"] },

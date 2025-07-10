@@ -13,14 +13,14 @@
   font-size: 25px;
 }
 .tools {
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 20px;
-    padding: 20px;
-    margin-block: 15px;
-    background-color: #cdcdcda0;
-    box-shadow: rgba(50, 50, 93, 0.25) 0px 50px 100px -20px,
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 20px;
+  padding: 20px;
+  margin-block: 15px;
+  background-color: #cdcdcda0;
+  box-shadow: rgba(50, 50, 93, 0.25) 0px 50px 100px -20px,
     rgba(0, 0, 0, 0.3) 0px 30px 60px -30px,
     rgba(10, 37, 64, 0.35) 0px -2px 6px 0px inset;
 }
@@ -486,13 +486,68 @@ pick-list {
   aspect-ratio: 1;
   border-radius: 50%;
   background: #25b09b;
-  --_m: 
-    conic-gradient(#0000 10%,#000),
-    linear-gradient(#000 0 0) content-box;
+  --_m: conic-gradient(#0000 10%, #000), linear-gradient(#000 0 0) content-box;
   -webkit-mask: var(--_m);
-          mask: var(--_m);
+  mask: var(--_m);
   -webkit-mask-composite: source-out;
-          mask-composite: subtract;
+  mask-composite: subtract;
   animation: l3 1s infinite linear;
 }
-@keyframes l3 {to{transform: rotate(1turn)}}
+@keyframes l3 {
+  to {
+    transform: rotate(1turn);
+  }
+}
+option,select {
+  cursor: pointer;
+}
+.add-block-btn-wraper button{
+  margin-inline: 10px;
+}
+.example-task button {
+  margin-inline: 10px;
+}
+.block-times {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+}
+
+.flat-picker {
+  width: 150px;
+  font-size: 19px;
+  padding: 3px;
+  border-radius: 5px;
+  border: none;
+}
+.day-span {
+  font-size: 20px;
+}
+.block-time-start {
+  background-color: rgba(144, 238, 144, 0.107);
+  border-left: 1px solid #ddd;
+  border-radius: 10px;
+  margin-left: 5px;
+}
+.flat-start {
+  background-color: rgba(144, 238, 144, 0.107);
+}
+.flat-end {
+  background-color: rgba(240, 128, 128, 0.12);
+}
+
+.block-time-end {
+  background-color: rgba(240, 128, 128, 0.12);
+  border-radius: 10px;
+}
+.soldier-select {
+  font-size: 20px;
+  padding: 5px;
+  border-radius: 8px;
+  padding-inline: 10px;
+  margin-block: 5px;
+}
+.block-amounts {
+  display: flex;
+  flex-direction: column;
+}

@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>שבצק מסייעת 8116</title>
+
+    <link rel="stylesheet" href="./style.css" />
+    <script src="./solidjer.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="./notify.js"></script>
+    <!-- The core Firebase JS SDK is always required and must be listed first -->
+    <script src="https://www.gstatic.com/firebasejs/7.14.6/firebase-app.js"></script>
+    <!-- TODO: Add SDKs for Firebase products that you want to use
+    https://firebase.google.com/docs/web/setup#available-libraries -->
+    <script src="https://www.gstatic.com/firebasejs/7.14.6/firebase-analytics.js"></script>
+    <!--**** Remember to add the database script ***-->
+    <script src="https://www.gstatic.com/firebasejs/7.14.6/firebase-database.js"></script>
+    <script src="./config.js"></script>
+    <script src="./firebase.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/gh/GiladMeirson/picklist.js@main/pickList.min.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/he.js"></script>
+    <script src="./script2.js"></script>
+  </head>
+  <body dir="rtl">
+    <div class="container">
+      <div class="header">
+        <h1 id="header-title">שבצק</h1>
+        <input type="date" name="" id="header-date" />
+      </div>
+
+      <div class="tools">
+        <button class="btn" onclick="addNewTask()" id="edit-task">
+          הוסף משימה חדשה➕
+        </button>
+        <button class="btn" onclick="createNewSchedule()" id="edit-task">
+          שבצק חדש עם אותן משימות ♻️
+        </button>
+        <button class="btn" onclick="showHereModal()" id="edit-task">
+          הזנת נוכחות 🫡
+        </button>
+        <!-- <button class="btn" onclick="exportScheduleToPDF()" id="edit-task">
+          ייצוא לPDF 📃
+        </button> -->
+        <button class="btn" onclick="moveto('restsSoldierRest')" id="edit-task">
+          מבט על - חיילים 🪖
+        </button>
+
+        <button class="btn" onclick="saveToserver()" id="edit-task">
+          שמור שינויים 💾
+        </button>
+      </div>
+
+      <div id="tasks-container" class="tasks-container">
+        <!-- <div class="table-container" id="demo123">
+          <span class="task-close" onclick="removeTask('demo123')">X</span>
+          <h2 style="background-color: #ff5252">
+            <input
+              style="background-color: #ff5252"
+              type="text"
+              class="task-title"
+              id=""
+              onKeyUp="handleNameChange(this,'demo123')"
+              value="משימה חדשה"
+            />
+          </h2>
+          <table class="example-task">
+            <thead>
+              <tr>
+                <th class="task-time">שעות</th>
+                <th class="solijer-name">שם חייל</th>
+              </tr>
+            </thead>
+            <tbody id="task-body-demo123">
+              <tr id="block456">
+                <td class="task-time">
+                  <div class="block-times">
+                    <div class="block-time-start">
+                      <span class="start-time-span"> מתחיל </span>
+                      <br />
+                      <span class="day-span">יום רביעי</span>
+                      <input
+                        type="text"
+                        class="flat-picker flat-start"
+                        id="start-time-block-456"
+                      />
+                    </div>
+                    <div class="block-time-end">
+                      <span class="end-time-span"> מסתיים </span>
+                      <br />
+                      <span class="day-span">יום רביעי</span>
+                      <input
+                        type="text"
+                        class="flat-picker flat-end"
+                        id="end-time-block-456"
+                      />
+                    </div>
+                  </div>
+                </td>
+                <td class="solijer-name">
+                  <div id="soldier-amounts-block456" class="block-amounts">
+                    <select
+                      name=""
+                      class="soldier-select"
+                      id="soldier-select-block456"
+                    >
+                      <option value="-1">בחר חייל..</option>
+                    </select>
+                    <select
+                      name=""
+                      class="soldier-select"
+                      id="soldier-select-block456"
+                    >
+                      <option value="-1">בחר חייל..</option>
+                    </select>
+                    <select
+                      name=""
+                      class="soldier-select"
+                      id="soldier-select-block456"
+                    >
+                      <option value="-1">בחר חייל..</option>
+                    </select>
+                    <select
+                      name=""
+                      class="soldier-select"
+                      id="soldier-select-block456"
+                    >
+                      <option value="-1">בחר חייל..</option>
+                    </select>
+                  </div>
+                  <button
+                    onclick="addSoldierToBlock('block456')"
+                    class="add-soldier-btn"
+                  >
+                    +
+                  </button>
+                  <button
+                    onclick="removeSoldierFromBlock('block456')"
+                    class="remove-soldier-btn"
+                  >
+                    -
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="add-block-btn-wraper">
+            <button
+              onclick="addNewBlock('demo123','task-body-demo123')"
+              class="add-block-btn"
+            >
+              +
+            </button>
+            <button
+              onclick="removeBlock('demo123','task-body-demo123')"
+              class="remove-block-btn"
+            >
+              -
+            </button>
+          </div>
+        </div> -->
+      </div>
+    </div>
+  </body>
+</html>
