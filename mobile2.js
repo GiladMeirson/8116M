@@ -17,14 +17,16 @@ $(document).ready(() => {
 
   $("#search-input").on("input", () => {
     let searchTerm = $("#search-input").val().toLowerCase();
-    console.log("Search term:", searchTerm);
-    let filteredShifts = GLOBAL.filter((shift) =>
-      shift.soldierName.toLowerCase().includes(searchTerm)
-    );
-    console.log("Filtered tasks:", filteredShifts);
+    const filteredData = GLOBAL.map((task) => ({
+      ...task,
+      blocks: task.blocks.filter((block) =>
+        block.soldiersNames?.some((soldier) =>
+          soldier.value.toLowerCase().includes(searchTerm)
+        )
+      ),
+    })).filter((task) => task.blocks.length > 0);
 
-    // Re-render the schedule with the filtered tasks
-    RenderSchedule(filterByDate(filteredShifts, $("#header-date").val()));
+    RenderSchedule(filterByDate(filteredData, $("#header-date").val()));
   });
 });
 
@@ -101,9 +103,9 @@ const filterByDate = (data, targetDate) => {
 const RenderSchedule = (data) => {
   const $ph = $("#schedule-ph");
   $ph.empty();
-  let str = '';
+  let str = "";
 
-  data.forEach(task => {
+  data.forEach((task) => {
     str += `
       <div class="task">
         <h1 class="task-title" style="background-color: ${task.color}">${task.taskName}</h1>
@@ -112,12 +114,18 @@ const RenderSchedule = (data) => {
           <div class="col-8">חיילים</div>
         </div>`;
 
-    task.blocks.forEach(block => {
+    task.blocks.forEach((block) => {
       // Convert timestamps to readable format
       const startDate = new Date(block.startTimeStamp);
       const endDate = new Date(block.endTimeStamp);
-      const startTime = startDate.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
-      const endTime = endDate.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
+      const startTime = startDate.toLocaleTimeString("he-IL", {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+      const endTime = endDate.toLocaleTimeString("he-IL", {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
 
       if (block.soldiersNames && block.soldiersNames.length > 0) {
         str += `
@@ -128,17 +136,23 @@ const RenderSchedule = (data) => {
             </div>
             <div class="col-8 soldiers-col">
               <ul class="soldiers-list">
-                ${block.soldiersNames.map(soldier => 
-                  `<li onclick="handleSoldierClick('${soldier.value.replace(/'/g, "\\'")}')" 
+                ${block.soldiersNames
+                  .map(
+                    (soldier) =>
+                      `<li onclick="handleSoldierClick('${soldier.value.replace(
+                        /'/g,
+                        "\\'"
+                      )}')" 
                       class="soldier-item">${soldier.value}</li>`
-                ).join('')}
+                  )
+                  .join("")}
               </ul>
             </div>
           </div>`;
       }
     });
 
-    str += '</div>';
+    str += "</div>";
   });
 
   $ph.append(str);
