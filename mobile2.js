@@ -7,7 +7,7 @@ $(document).ready(() => {
   let today = new Date();
   let tomorrow = new Date(today);
   tomorrow.setDate(tomorrow.getDate() + 0);
-  let formattedDate = tomorrow.toISOString().split("T")[0];
+  let formattedDate = tomorrow.toLocaleDateString("en-CA"); // YYYY-MM-DD format
   $("#header-date").val(formattedDate);
   $("#header-date").on("change", () => {
     const selectedDate = $("#header-date").val();
