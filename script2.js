@@ -430,7 +430,8 @@ const renderTasksList = () => {
         taskHTML += `<select onchange="updateSoldierSelection('${block.blockId}',this.value,this.id)" name="" class="soldier-select" id="soldier-select-block${block.blockId}-${i}">`;
         taskHTML += `<option value="-1">בחר חייל..</option>`;
         // Assuming you have a function to get soldiers, you can loop through them here
-        SOLIDJER.forEach((soldier) => {
+        let soldiersAreHere = getSoldierObjByPrences(block.startTimeStamp, block.endTimeStamp);
+        soldiersAreHere.forEach((soldier) => {
           const isSelected =
             selectedSoldier &&
             selectedSoldier.keywords[1] === soldier.keywords[1];
@@ -517,6 +518,24 @@ const getTommorowDateString = () => {
   tommorowDate.setDate(tommorowDate.getDate() + 1);
   return tommorowDate.toISOString().split("T")[0]; // Format to YYYY-MM-DD
 };
+
+const getSoldierObjByPrences = (blockStartTimeStamp, BlockEndTimeStamp) => {
+  let soldierArrayToReturn = [];
+  const startDate = new Date(blockStartTimeStamp).toISOString().split("T")[0];
+  const endDate = new Date(BlockEndTimeStamp).toISOString().split("T")[0];
+
+  // Get all soldier names who are present on either start or end date
+  const presentSoldierNames = GLOBAL.PRECENCE.filter(
+    (presence) => presence.date === startDate || presence.date === endDate
+  ).map((presence) => presence.name.trim().toLowerCase());
+
+  // Filter SOLIDJER array to get only present soldiers
+  soldierArrayToReturn = SOLIDJER.filter((soldier) =>
+    presentSoldierNames.includes(soldier.value.trim().toLowerCase())
+  );
+
+  return soldierArrayToReturn;
+};
 const getTaskById = (taskId) => {
   const task = GLOBAL.TASKS.find((task) => task.taskId === taskId);
   if (task) {
@@ -571,15 +590,17 @@ const calculateDurationInHours = (startTimestamp, endTimestamp) => {
 const showHereModal = () => {
   $("#ishereIN").val("");
   $("#ishereINtommorrow").val("");
-  todayDate = $("#ishereINDATE").val(new Date().toISOString().split("T")[0]);
-  tommorowDate = $("#ishereINDATEtommorrow").val(
+  let todayDate = $("#ishereINDATE").val(
+    new Date().toISOString().split("T")[0]
+  );
+  let tommorowDate = $("#ishereINDATEtommorrow").val(
     new Date(getTommorowDateString()).toISOString().split("T")[0]
   );
   for (let i = 0; i < GLOBAL.PRECENCE.length; i++) {
-    if (GLOBAL.PRECENCE[i].date === todayDate) {
+    if (GLOBAL.PRECENCE[i].date === todayDate.val()) {
       $("#ishereIN").val(GLOBAL.PRECENCE[i].name + "\n" + $("#ishereIN").val());
     }
-    if (GLOBAL.PRECENCE[i].date === tommorowDate) {
+    if (GLOBAL.PRECENCE[i].date === tommorowDate.val()) {
       $("#ishereINtommorrow").val(
         GLOBAL.PRECENCE[i].name + "\n" + $("#ishereINtommorrow").val()
       );
@@ -741,6 +762,13 @@ const getFromServer = () => {
     $(".loader").hide();
     if (data) {
       GLOBAL = data;
+      if (!GLOBAL.TASKS) {
+        GLOBAL.TASKS = [];
+      }
+      if (!GLOBAL.PRECENCE) {
+        GLOBAL.PRECENCE = [];
+      }
+
       console.log("Data loaded from server:", GLOBAL);
       renderTasksList();
       Swal.fire({
