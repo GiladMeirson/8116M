@@ -310,17 +310,14 @@ const saveHeres = () => {
   const soldiersToday = $("#ishereIN").val().split("\n");
   const soldiersTommorrow = $("#ishereINtommorrow").val().split("\n");
 
-  // Helper function to check if soldier already exists for a specific date
-  const soldierExistsForDate = (soldierName, date) => {
-    return GLOBAL.PRECENCE.some(
-      (soldier) =>
-        soldier.name.trim() === soldierName.trim() && soldier.date === date
-    );
-  };
+  // Remove existing entries for today and tomorrow dates only
+  GLOBAL.PRECENCE = GLOBAL.PRECENCE.filter(
+    (soldier) => soldier.date !== todayDate && soldier.date !== tommorowDate
+  );
 
   // Add today's soldiers
   soldiersToday.forEach((soldier) => {
-    if (soldier.trim() && !soldierExistsForDate(soldier, todayDate)) {
+    if (soldier.trim()) {
       GLOBAL.PRECENCE.push({
         name: soldier.trim(),
         date: todayDate,
@@ -331,7 +328,7 @@ const saveHeres = () => {
 
   // Add tomorrow's soldiers
   soldiersTommorrow.forEach((soldier) => {
-    if (soldier.trim() && !soldierExistsForDate(soldier, tommorowDate)) {
+    if (soldier.trim()) {
       GLOBAL.PRECENCE.push({
         name: soldier.trim(),
         date: tommorowDate,
@@ -430,7 +427,10 @@ const renderTasksList = () => {
         taskHTML += `<select onchange="updateSoldierSelection('${block.blockId}',this.value,this.id)" name="" class="soldier-select" id="soldier-select-block${block.blockId}-${i}">`;
         taskHTML += `<option value="-1">בחר חייל..</option>`;
         // Assuming you have a function to get soldiers, you can loop through them here
-        let soldiersAreHere = getSoldierObjByPrences(block.startTimeStamp, block.endTimeStamp);
+        let soldiersAreHere = getSoldierObjByPrences(
+          block.startTimeStamp,
+          block.endTimeStamp
+        );
         soldiersAreHere.forEach((soldier) => {
           const isSelected =
             selectedSoldier &&
