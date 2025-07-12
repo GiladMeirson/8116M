@@ -210,6 +210,17 @@ const removeTask = (taskId) => {
 const updateSoldierSelection = (blockId, soldierId, selectId) => {
   const block = getBlockById(blockId);
   if (block) {
+    // If -1 is selected, remove the soldier with matching selectId
+    if (soldierId === "-1") {
+      const soldierIndex = block.soldiersNames.findIndex(
+        (soldier) => soldier.selectId === selectId
+      );
+      if (soldierIndex !== -1) {
+        block.soldiersNames.splice(soldierIndex, 1);
+      }
+      return;
+    }
+
     // Find the soldier object from SOLIDJER array
     let soldierObj = SOLIDJER.find(
       (soldier) => soldier.keywords[1] === soldierId
@@ -265,11 +276,9 @@ const updateSoldierSelection = (blockId, soldierId, selectId) => {
             title: "custom-swal-title",
             text: "custom-swal-text",
           },
-          // Add this style object
           showClass: {
             popup: "animate__animated animate__fadeInDown",
           },
-          // Add this property
           html: textToWarn.replace(/\n/g, "<br>"),
         });
         // Reset the select element to default value
@@ -484,6 +493,7 @@ const renderDeatilSoldierModal = (block, soldierObj) => {
     block.startTimeStamp
   );
 
+  console.log("Last Shift in renderDeatilSoldierModal:", lastShift);
   if (lastShift) {
     const restTimeHours = calculateDurationInHours(
       lastShift.block.endTimeStamp,
@@ -716,7 +726,7 @@ function getLatestShiftBefore(soldierId, timestamp) {
     task.blocks.forEach((block) => {
       // Check if block ends before the given timestamp and has soldiers
       if (
-        block.endTimeStamp < timestamp &&
+        block.endTimeStamp <= timestamp &&
         block.soldiersNames &&
         block.soldiersNames.length > 0
       ) {
