@@ -1,3 +1,28 @@
+/* Add this at the top of your CSS file */
+html,
+body {
+  max-width: 100%;
+  overflow-x: hidden;
+  margin: 0;
+  padding: 0;
+}
+
+/* Modify your container styles */
+#container {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 0 10px; /* Add some padding instead of margin */
+}
+
+/* Update the row class */
+.row {
+  border: 1px solid black;
+  width: 100%;
+  margin: 0;
+  box-sizing: border-box;
+}
+
 span {
   margin-inline: 5px;
 }
