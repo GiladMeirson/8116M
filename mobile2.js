@@ -110,8 +110,8 @@ const RenderSchedule = (data) => {
       <div class="task">
         <h1 class="task-title" style="background-color: ${task.color}">${task.taskName}</h1>
         <div class="row header">
-          <div class="col-4">שעות</div>
-          <div class="col-8">חיילים</div>
+          <div class="col-5">שעות</div>
+          <div class="col-7">חיילים</div>
         </div>`;
 
     task.blocks.forEach((block) => {
@@ -130,11 +130,11 @@ const RenderSchedule = (data) => {
       if (block.soldiersNames && block.soldiersNames.length > 0) {
         str += `
           <div class="row content">
-            <div class="col-4 times-col">
+            <div class="col-5 times-col">
               <p class="time">${startTime}-${endTime}</p>
               <p class="day_in_week">${formatDayRange(startDate, endDate)}</p>
             </div>
-            <div class="col-8 soldiers-col">
+            <div class="col-7 soldiers-col">
               <ul class="soldiers-list">
                 ${block.soldiersNames
                   .map(
