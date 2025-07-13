@@ -17,6 +17,10 @@ $(document).ready(() => {
 
   $("#search-input").on("input", () => {
     let searchTerm = $("#search-input").val().toLowerCase();
+
+    // Remove previous highlights
+    $(".highlight-soldier").removeClass("highlight-soldier");
+
     const filteredData = GLOBAL.map((task) => ({
       ...task,
       blocks: task.blocks.filter((block) =>
@@ -27,6 +31,17 @@ $(document).ready(() => {
     })).filter((task) => task.blocks.length > 0);
 
     RenderSchedule(filterByDate(filteredData, $("#header-date").val()));
+
+    // Add highlight to matching soldiers if there's a search term
+    if (searchTerm) {
+      setTimeout(() => {
+        $(".soldier-item").each(function () {
+          if ($(this).text().toLowerCase().includes(searchTerm)) {
+            $(this).addClass("highlight-soldier");
+          }
+        });
+      }, 100); // Small delay to ensure DOM is updated
+    }
   });
 });
 
@@ -143,7 +158,9 @@ const RenderSchedule = (data) => {
                         /'/g,
                         "\\'"
                       )}')" 
-                      class="soldier-item">${soldier.value}</li>`
+                      class="soldier-item" id="id-${soldier.keywords[1]}">${
+                        soldier.value
+                      }</li>`
                   )
                   .join("")}
               </ul>

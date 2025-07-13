@@ -145,3 +145,29 @@ input[type="date"] {
 .soldier-detail {
   font-size: 1.5rem;
 }
+
+.highlight-soldier {
+  animation: highlightFlicker 3s ease-in-out infinite;
+  position: relative;
+}
+
+@keyframes highlightFlicker {
+  0% {
+    background-color: transparent;
+  }
+  20% {
+    background-color: #ffeb3b;
+  }
+  40% {
+    background-color: transparent;
+  }
+  60% {
+    background-color: #ffeb3b;
+  }
+  80% {
+    background-color: transparent;
+  }
+  100% {
+    background-color: #ffeb3b;
+  }
+}
