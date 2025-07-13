@@ -600,12 +600,12 @@ const calculateDurationInHours = (startTimestamp, endTimestamp) => {
 const showHereModal = () => {
   $("#ishereIN").val("");
   $("#ishereINtommorrow").val("");
-  let todayDate = $("#ishereINDATE").val(
-    new Date().toISOString().split("T")[0]
-  );
-  let tommorowDate = $("#ishereINDATEtommorrow").val(
-    new Date(getTommorowDateString()).toISOString().split("T")[0]
-  );
+let todayDate = $("#ishereINDATE").val(
+    getFormattedDateADD(1) // Get tomorrow's date
+);
+let tommorowDate = $("#ishereINDATEtommorrow").val(
+    getFormattedDateADD(2) // Get day after tomorrow
+);
   for (let i = 0; i < GLOBAL.PRECENCE.length; i++) {
     if (GLOBAL.PRECENCE[i].date === todayDate.val()) {
       $("#ishereIN").val(GLOBAL.PRECENCE[i].name + "\n" + $("#ishereIN").val());
@@ -759,6 +759,17 @@ function getLatestShiftBefore(soldierId, timestamp) {
 
   // Return the latest block (first after sorting) or null if no blocks found
   return soldierBlocks.length > 0 ? soldierBlocks[0] : null;
+}
+
+
+// Add this helper function to get formatted dates
+function getFormattedDateADD(daysToAdd) {
+    const date = new Date();
+    date.setDate(date.getDate() + daysToAdd);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
 }
 // ------------------------------ SERVER ------------------------------
 const saveToserver = () => {
