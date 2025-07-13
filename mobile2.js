@@ -44,7 +44,9 @@ $(document).ready(() => {
     }
 
     if (searchTerm == "") {
-      $(".highlight-soldier").removeClass("highlight-soldier");
+      setTimeout(() => {
+        $(".highlight-soldier").removeClass("highlight-soldier");
+      }, 101);
     }
   });
 });
