@@ -302,7 +302,7 @@ const moveto = (locationName) => {
     cancelButtonText: "לא, המשך בלי לשמור",
   }).then((result) => {
     if (result.isConfirmed) {
-      //saveToserver();
+      saveToserver();
       setTimeout(() => {
         window.location.href = `${locationName}.html`;
       }, 1000);
@@ -763,6 +763,8 @@ function getLatestShiftBefore(soldierId, timestamp) {
 // ------------------------------ SERVER ------------------------------
 const saveToserver = () => {
   $(".loader").show();
+  localStorage.setItem("GLOBAL", JSON.stringify(GLOBAL));
+
   Save("Data2", GLOBAL);
 };
 
@@ -778,6 +780,7 @@ const getFromServer = () => {
       if (!GLOBAL.PRECENCE) {
         GLOBAL.PRECENCE = [];
       }
+      localStorage.setItem("GLOBAL", JSON.stringify(GLOBAL));
 
       console.log("Data loaded from server:", GLOBAL);
       renderTasksList();

@@ -27,74 +27,90 @@ $(document).ready(() => {
 });
 
 const getNormalizedData = () => {
-  const shifts = JSON.parse(localStorage.getItem("shifts")) || [];
-  console.log("Shifts: ", shifts);
+  GLOBAL = JSON.parse(localStorage.getItem("GLOBAL")) || {};
+  console.log("GLOBAL data:", GLOBAL);
 
-  // Group shifts by soldier name
-  const soldierShifts = {};
+  // Create a map to store the latest task for each soldier
+  const soldierLatestTasks = new Map();
 
-  shifts.forEach((shift) => {
-    if (!soldierShifts[shift.soldierName]) {
-      soldierShifts[shift.soldierName] = [];
+  // Process each task and its blocks
+  GLOBAL.TASKS.forEach((task) => {
+    // Process each block in the task
+    task.blocks.forEach((block) => {
+      // Process each soldier in the block
+      block.soldiersNames.forEach((soldier) => {
+        const soldierName = soldier.value;
+        const currentEndTime = new Date(block.endTimeStamp);
+
+        // Check if this is the latest task for this soldier
+        if (
+          !soldierLatestTasks.has(soldierName) ||
+          currentEndTime > soldierLatestTasks.get(soldierName).endTime
+        ) {
+          soldierLatestTasks.set(soldierName, {
+            name: soldierName,
+            personalNumber: soldier.keywords[1] || "N/A",
+            lastTaskName: task.taskName,
+            lastTaskEndTime: currentEndTime,
+            endTimeStamp: block.endTimeStamp,
+          });
+        }
+      });
+    });
+  });
+
+  // Inside getNormalizedData function, update the time calculation part:
+  const normalizedData = Array.from(soldierLatestTasks.values()).map(
+    (soldier) => {
+      // Calculate rest time from last task end until now
+      const now = new Date();
+      const restTimeMs = now - soldier.lastTaskEndTime;
+
+      // Handle future dates
+      if (restTimeMs < 0) {
+        return {
+          name: soldier.name,
+          personalNumber: soldier.personalNumber,
+          lastTaskName: soldier.lastTaskName,
+          lastTaskEndDate: formatDateTime(soldier.endTimeStamp),
+          restTime: "In Progress", // or "00:00" or "Future Task"
+        };
+      }
+
+      // Convert milliseconds to hours and minutes
+      const totalMinutes = Math.floor(restTimeMs / (1000 * 60));
+      const hours = Math.floor(totalMinutes / 60);
+      const minutes = totalMinutes % 60;
+
+      // Format as HH:MM
+      const restTimeFormatted = `${hours.toString().padStart(2, "0")}:${minutes
+        .toString()
+        .padStart(2, "0")}`;
+
+      return {
+        name: soldier.name,
+        personalNumber: soldier.personalNumber,
+        lastTaskName: soldier.lastTaskName,
+        lastTaskEndDate: formatDateTime(soldier.endTimeStamp),
+        restTime: restTimeFormatted,
+      };
     }
-    soldierShifts[shift.soldierName].push(shift);
-  });
-
-  // Get normalized data for each soldier
-  const normalizedData = [];
-
-  Object.keys(soldierShifts).forEach((soldierName) => {
-    // Sort shifts by date and end time to get the latest shift
-    const soldierShiftsList = soldierShifts[soldierName].sort((a, b) => {
-      const dateTimeA = new Date(`${a.date}T${a.endTime}`);
-      const dateTimeB = new Date(`${b.date}T${b.endTime}`);
-      return dateTimeB - dateTimeA; // Latest first
-    });
-
-    const lastShift = soldierShiftsList[0];
-
-    // Get soldier details from SOLIDJER array
-    const soldierDetails = getFullSoldiersByNames([soldierName]);
-    const personalNumber =
-      soldierDetails.length > 0
-        ? soldierDetails[0].keywords[1] || soldierDetails[0].id || "N/A"
-        : "N/A";
-
-    // Calculate rest time from last shift end until now
-    const lastShiftEndDateTime = new Date(
-      `${lastShift.date}T${lastShift.endTime}`
-    );
-    const now = new Date();
-    const restTimeMs = now - lastShiftEndDateTime;
-    const restTimeHours = restTimeMs / (1000 * 60 * 60); // Convert to decimal hours
-
-    const restTimeString = restTimeHours.toFixed(2); // Format to 2 decimal places (e.g., 8.54)
-    normalizedData.push({
-      name: soldierName,
-      personalNumber: personalNumber,
-      lastTaskName: lastShift.taskName,
-      lastTaskEndDate: `${convertDateFormat(lastShift.date)} ${lastShift.endTime}`,
-      restTime: parseFloat(restTimeString),
-    });
-  });
-
-  //   // Update DataTable with normalized data
-  //   if (DATA_TABLE) {
-  //     DATA_TABLE.clear();
-  //     normalizedData.forEach(soldier => {
-  //       DATA_TABLE.row.add([
-  //         soldier.name,
-  //         soldier.personalNumber,
-  //         soldier.lastTaskName,
-  //         soldier.lastTaskEndDate,
-  //         soldier.restTime
-  //       ]);
-  //     });
-  //     DATA_TABLE.draw();
-  //   }
+  );
 
   return normalizedData;
 };
+
+// Helper function to format date and time
+function formatDateTime(timestamp) {
+  const date = new Date(timestamp);
+  const day = date.getDate().toString().padStart(2, "0");
+  const month = (date.getMonth() + 1).toString().padStart(2, "0");
+  const year = date.getFullYear();
+  const hours = date.getHours().toString().padStart(2, "0");
+  const minutes = date.getMinutes().toString().padStart(2, "0");
+
+  return `${day}/${month}/${year} ${hours}:${minutes}`;
+}
 
 const moveto = (locationName) => {
   window.location.href = `${locationName}.html`;
@@ -117,7 +133,7 @@ function getFullSoldiersByNames(namesList) {
 
 function convertDateFormat(dateString) {
   // Split the date string by '-'
-  const [year, month, day] = dateString.split('-');
+  const [year, month, day] = dateString.split("-");
   // Return in dd/mm/yyyy format
   return `${day}/${month}/${year}`;
 }
