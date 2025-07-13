@@ -42,6 +42,10 @@ $(document).ready(() => {
         });
       }, 100); // Small delay to ensure DOM is updated
     }
+
+    if (searchTerm == "") {
+      $(".highlight-soldier").removeClass("highlight-soldier");
+    }
   });
 });
 
