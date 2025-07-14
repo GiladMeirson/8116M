@@ -132,6 +132,8 @@ const SOLIDJER = [
   { value: "משה יצחק רכס", keywords: ["מסופח", "8138954"] },
   { value: "שי אריאל שמבה", keywords: ["מסופח", "7395364"] },
   { value: "שלום אביטן", keywords: ["מסופח", "7084942"] },
+  { value: "שלמה קפלן", keywords: ["מסופח", "8270486"] },
+  { value: "דוד רובין", keywords: ["מסופח", "9045341"] },
 
   // Mplag Platoon
   { value: "ניר אברהם", keywords: ['מפל"ג', "8051806"] },
